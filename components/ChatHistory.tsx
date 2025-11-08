@@ -2,6 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { ChatSession, ChatMessage } from '../types';
 
+// FIX: Declare `process` to use `process.env.API_KEY` as per Gemini API guidelines.
+declare const process: {
+    env: {
+        API_KEY: string;
+    }
+};
+
 // Helper to format dates
 const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -60,9 +67,11 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ sessions, addSession, updateS
         updateSession({ ...currentSession, messages: updatedMessages });
 
         try {
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            // FIX: Use `process.env.API_KEY` as per the Gemini API guidelines, which resolves the original `import.meta.env` error.
+            const apiKey = process.env.API_KEY;
             if (!apiKey) {
-                throw new Error("Gemini API key is not configured.");
+                // FIX: Updated error message to reflect the use of process.env.API_KEY.
+                throw new Error("Gemini API key is not configured in API_KEY environment variable.");
             }
             
             const ai = new GoogleGenAI({ apiKey });
