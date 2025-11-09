@@ -143,7 +143,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
     }, [expenses, doc.customer, doc.items]);
 
     const currentDocument = useMemo(() => {
-        const baseDoc = { ...doc };
+        const baseDoc = JSON.parse(JSON.stringify(doc)); // Create a deep copy
         if (!('id' in baseDoc) || baseDoc.id === 'preview-id') {
             (baseDoc as Document).id = 'preview-id'; // Keep a temporary ID for preview
             (baseDoc as Document).doc_number = '...'; // Placeholder text
