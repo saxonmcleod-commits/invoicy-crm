@@ -62,6 +62,15 @@ serve(async (req) => {
           const newDueDate = new Date(today);
           newDueDate.setDate(newDueDate.getDate() + 30); // Assuming net 30
 
+          // Get all invoices to calculate the next sequential number
+          const { data: allInvoices } = await supabaseAdmin.from('documents').select('doc_number').eq('type', 'Invoice');
+          let maxNumber = 10000;
+          allInvoices?.forEach(inv => {
+            const num = parseInt(inv.doc_number.replace(/\D/g, ''), 10);
+            if (!isNaN(num) && num > maxNumber) maxNumber = num;
+          });
+          const nextDocNumber = String(maxNumber + 1);
+
           const newInvoice = {
             ...doc,
             issue_date: today.toISOString().split('T')[0],
@@ -70,7 +79,7 @@ serve(async (req) => {
             source_doc_id: doc.id, // Link back to the original recurring invoice
             // Important: remove properties that should be unique for a new record
             id: undefined,
-            doc_number: `INV-${Date.now().toString().slice(-6)}`,
+            doc_number: nextDocNumber,
             created_at: undefined,
           };
           delete newInvoice.id;
