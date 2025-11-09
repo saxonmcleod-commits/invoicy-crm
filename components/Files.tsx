@@ -177,15 +177,14 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
             const docIdsToDelete = Array.from(selectedItems).filter(id => allFiles.find(f => f.id === id)?.fileType === 'Document');
             const letterIdsToDelete = Array.from(selectedItems).filter(id => allFiles.find(f => f.id === id)?.fileType === 'BusinessLetter');
 
-            const deletePromises: Promise<void>[] = [];
+            const promises: Promise<void>[] = [];
             if (docIdsToDelete.length > 0) {
-                deletePromises.push(bulkDeleteDocuments(docIdsToDelete));
+                promises.push(bulkDeleteDocuments(docIdsToDelete));
             }
             if (letterIdsToDelete.length > 0) {
-                deletePromises.push(bulkDeleteBusinessLetters(letterIdsToDelete));
+                promises.push(bulkDeleteBusinessLetters(letterIdsToDelete));
             }
-
-            await Promise.all(deletePromises);
+            await Promise.all(promises);
             setSelectedItems(new Set());
         }
     };

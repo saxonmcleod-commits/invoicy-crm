@@ -62,11 +62,15 @@ serve(async (req) => {
           const newDueDate = new Date(today);
           newDueDate.setDate(newDueDate.getDate() + 30); // Assuming net 30
 
-          // Get all invoices to calculate the next sequential number
-          const { data: allInvoices } = await supabaseAdmin.from('documents').select('doc_number').eq('type', 'Invoice');
+          // Get all non-recurring invoices to calculate the next sequential number
+          const { data: allInvoices } = await supabaseAdmin
+            .from('documents')
+            .select('doc_number')
+            .eq('type', 'Invoice')
+            .is('recurrence', null);
           let maxNumber = 10000;
           allInvoices?.forEach(inv => {
-            const num = parseInt(String(inv.doc_number).replace(/\D/g, ''), 10);
+            const num = parseInt(String(inv.doc_number).split('-')[1], 10);
             if (!isNaN(num) && num > maxNumber) maxNumber = num;
           });
           const nextDocNumber = `INV-${maxNumber + 1}`;
