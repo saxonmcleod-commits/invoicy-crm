@@ -70,14 +70,12 @@ serve(async (req) => {
         };
         delete newInvoice.id;
         delete newInvoice.customer; // Remove the nested customer object
-        delete newInvoice.customer; // Remove the nested customer object
         delete newInvoice.created_at;
 
         // 3. Insert the new invoice into the database
         const { data: insertedData, error: insertError } = await supabaseAdmin
           .from('documents')
           .insert(newInvoice)
-          .select('*, customer:customers(*)') // Re-fetch the customer after insert
           .select()
           .single();
 
