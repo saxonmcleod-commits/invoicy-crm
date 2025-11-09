@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { ChatSession, ChatMessage } from '../types';
-
-// FIX: Declare `process` to use `process.env.API_KEY` as per Gemini API guidelines.
-declare const process: {
-    env: {
-        API_KEY: string;
-    }
-};
+import { supabase } from '../supabaseClient';
 
 // Helper to format dates
 const formatDate = (isoString: string) => {
@@ -67,40 +60,30 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ sessions, addSession, updateS
         updateSession({ ...currentSession, messages: updatedMessages });
 
         try {
-            // FIX: Use `process.env.API_KEY` as per the Gemini API guidelines, which resolves the original `import.meta.env` error.
-            const apiKey = process.env.API_KEY;
-            if (!apiKey) {
-                // FIX: Updated error message to reflect the use of process.env.API_KEY.
-                throw new Error("Gemini API key is not configured in API_KEY environment variable.");
-            }
-            
-            const ai = new GoogleGenAI({ apiKey });
-            const chat: Chat = ai.chats.create({
-                model: 'gemini-2.5-flash',
-                history: currentSession.messages.map(m => ({
-                    role: m.role,
-                    parts: [{ text: m.content }],
-                })),
+            // Call our secure Supabase Edge Function
+            const { data, error } = await supabase.functions.invoke('generate-chat', {
+                body: {
+                    history: currentSession.messages,
+                    message: userMessage.content,
+                },
             });
 
-            const response: GenerateContentResponse = await chat.sendMessage({ message: userMessage.content });
-            const modelMessage: ChatMessage = { role: 'model', content: response.text };
+            if (error) throw error;
+
+            const modelMessage: ChatMessage = { role: 'model', content: data.response };
             
-            const finalSession = {
+            let finalSession = {
                 ...currentSession,
                 messages: [...updatedMessages, modelMessage]
             };
             
             if (currentSession.messages.length === 0) {
-                 const titleResponse = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: `Generate a short, concise title (4 words max) for this user prompt: "${tempMessage}"`,
-                });
-                finalSession.title = titleResponse.text.replace(/"/g, '').trim();
+                // For now, we'll simplify the title generation. We can add this back later.
+                finalSession.title = tempMessage.split(' ').slice(0, 4).join(' ');
             }
             updateSession(finalSession);
         } catch (error) {
-            console.error("Error with Gemini API:", error);
+            console.error("Error calling Supabase function:", error);
             const errorMessage: ChatMessage = { role: 'model', content: 'Sorry, I ran into an issue. Please check your connection or API key and try again.' };
             updateSession({ ...currentSession, messages: [...updatedMessages, errorMessage] });
         } finally {
