@@ -241,6 +241,9 @@ const App: React.FC = () => {
             nextDocNumber = `${doc.type.toUpperCase().slice(0,3)}-${Date.now().toString().slice(-6)}`;
         }
 
+        // The actual fix: remove the old doc_number before creating the new object
+        delete docData.doc_number;
+
         const newDocForDb = {
             ...docData,
             customer_id: doc.customer.id,
