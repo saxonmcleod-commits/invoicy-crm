@@ -73,7 +73,7 @@ serve(async (req) => {
             const num = parseInt(String(inv.doc_number).split('-')[1], 10);
             if (!isNaN(num) && num > maxNumber) maxNumber = num;
           });
-          const nextDocNumber = `INV-${maxNumber + 1}`;
+          const nextDocNumber = String(maxNumber + 1);
 
           const newInvoice = {
             ...doc,

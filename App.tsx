@@ -236,7 +236,7 @@ const App: React.FC = () => {
                 const num = parseInt(String(inv.doc_number).replace(/\D/g, ''), 10); // Strip non-digits
                 if (!isNaN(num) && num > maxNumber) maxNumber = num;
             });
-            nextDocNumber = `INV-${maxNumber + 1}`;
+            nextDocNumber = String(maxNumber + 1);
         } else {
             nextDocNumber = `${doc.type.toUpperCase().slice(0,3)}-${Date.now().toString().slice(-6)}`;
         }
