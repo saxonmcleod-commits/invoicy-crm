@@ -269,13 +269,23 @@ const App: React.FC = () => {
     const addBusinessLetter = async (letter: NewBusinessLetterData) => {
         if (!session || !letter.customer) return;
 
-        const { customer, ...letterData } = letter; // Separate customer from the rest of the data
+        const { customer, ...letterData } = letter;
+
+        // Call the database function to get the next sequential number
+        const { data: nextDocNumber, error: rpcError } = await supabase.rpc('get_next_doc_number', {
+            doc_type: 'Letter', // We'll need to update our DB function for this
+        });
+
+        if (rpcError) {
+            console.error('Error getting next document number for letter:', rpcError);
+            throw rpcError;
+        }
         
         const newLetterForDb = {
             ...letterData,
             customer_id: letter.customer.id,
             user_id: session.user.id,
-            doc_number: `LTR-${Date.now().toString().slice(-6)}`
+            doc_number: nextDocNumber,
         };
 
         const { data, error } = await supabase.from('business_letters').insert(newLetterForDb).select('*, customer:customers(*)').single();

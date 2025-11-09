@@ -4,7 +4,6 @@ import { Customer, Document, DocumentItem, DocumentType, DocumentStatus, Company
 import { TEMPLATES } from '../constants';
 import DocumentPreview from './DocumentPreview';
 import { generatePdf } from '../pdfGenerator';
-import { getNextDocNumber } from '../lib/actions/getNextDocNumber';
 import { useAutoSave, loadAutoSavedDraft, clearAutoSavedDraft } from '../hooks/useAutoSave';
 
 interface DocumentEditorProps {
@@ -195,23 +194,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
         setDoc(prev => ({...prev, items: [...prev.items, ...newItems]}));
     };
 
-    const handleSave = async () => {
+    const handleSave = () => {
         if (!doc.customer) {
             alert("Please select a customer.");
             return;
         }
         if (isEditMode) {
             updateDocument(doc as Document);
-            navigate('/files');
         } else {
-            // Get the next sequential number from the server
-            const nextDocNumber = await getNextDocNumber(doc.type);
-            const newDocumentWithNumber = { ...doc, doc_number: nextDocNumber };
-
-            addDocument(newDocumentWithNumber as NewDocumentData);
+            addDocument(doc as NewDocumentData);
             clearAutoSavedDraft(AUTO_SAVE_KEY);
-            navigate('/files');
         }
+        navigate('/files');
     };
     
     const handleDownloadPdf = () => {
