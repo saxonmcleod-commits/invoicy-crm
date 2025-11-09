@@ -66,7 +66,7 @@ serve(async (req) => {
           const { data: allInvoices } = await supabaseAdmin.from('documents').select('doc_number').eq('type', 'Invoice');
           let maxNumber = 10000;
           allInvoices?.forEach(inv => {
-            const num = parseInt(inv.doc_number.replace(/\D/g, ''), 10);
+            const num = parseInt(String(inv.doc_number).replace(/\D/g, ''), 10);
             if (!isNaN(num) && num > maxNumber) maxNumber = num;
           });
           const nextDocNumber = `INV-${maxNumber + 1}`;

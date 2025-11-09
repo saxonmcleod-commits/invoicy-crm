@@ -11,6 +11,8 @@ interface FilesProps {
     updateBusinessLetter: (letter: BusinessLetter) => void;
     deleteDocument: (docId: string) => void;
     deleteBusinessLetter: (letterId: string) => void;
+    bulkDeleteDocuments: (docIds: string[]) => Promise<void>;
+    bulkDeleteBusinessLetters: (letterIds: string[]) => Promise<void>;
     searchTerm: string;
 }
 
@@ -56,7 +58,7 @@ type FileItem = (Document | BusinessLetter) & { fileType: 'Document' | 'Business
 type ItemToDelete = { id: string; doc_number: string; fileType: 'Document' | 'BusinessLetter'; };
 type SortOption = 'most-recent' | 'oldest' | 'last-edited';
 
-const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument, editLetter, updateDocument, updateBusinessLetter, deleteDocument, deleteBusinessLetter, searchTerm }) => {
+const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument, editLetter, updateDocument, updateBusinessLetter, deleteDocument, deleteBusinessLetter, bulkDeleteDocuments, bulkDeleteBusinessLetters, searchTerm }) => {
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [showArchived, setShowArchived] = useState(false);
     const [sortOption, setSortOption] = useState<SortOption>('most-recent');
@@ -170,13 +172,16 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
         setSelectedItems(new Set());
     };
 
-    const handleBulkDelete = () => {
+    const handleBulkDelete = async () => {
         if (window.confirm(`Are you sure you want to delete ${selectedItems.size} items? This action cannot be undone.`)) {
-            selectedItems.forEach(id => {
-                const item = allFiles.find(f => f.id === id);
-                if (item?.fileType === 'Document') deleteDocument(id);
-                if (item?.fileType === 'BusinessLetter') deleteBusinessLetter(id);
-            });
+            const docIdsToDelete = Array.from(selectedItems).filter(id => allFiles.find(f => f.id === id)?.fileType === 'Document');
+            const letterIdsToDelete = Array.from(selectedItems).filter(id => allFiles.find(f => f.id === id)?.fileType === 'BusinessLetter');
+
+            const deletePromises = [];
+            if (docIdsToDelete.length > 0) deletePromises.push(bulkDeleteDocuments(docIdsToDelete));
+            if (letterIdsToDelete.length > 0) deletePromises.push(bulkDeleteBusinessLetters(letterIdsToDelete));
+
+            await Promise.all(deletePromises);
             setSelectedItems(new Set());
         }
     };

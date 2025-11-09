@@ -233,7 +233,7 @@ const App: React.FC = () => {
             const userInvoices = documents.filter(d => d.user_id === session.user.id && d.type === DocumentType.Invoice);
             let maxNumber = 10000;
             userInvoices.forEach(inv => {
-                const num = parseInt(inv.doc_number.replace(/\D/g, ''), 10); // Strip non-digits
+                const num = parseInt(String(inv.doc_number).replace(/\D/g, ''), 10); // Strip non-digits
                 if (!isNaN(num) && num > maxNumber) maxNumber = num;
             });
             nextDocNumber = `INV-${maxNumber + 1}`;
