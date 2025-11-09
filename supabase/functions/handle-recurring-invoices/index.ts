@@ -9,10 +9,12 @@ console.log('Hello from handle-recurring-invoices!');
 serve(async (req) => {
   try {
     // Create a Supabase client with the Auth context of the service role
+    const authHeader = req.headers.get('Authorization')!;
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
+        global: { headers: { Authorization: authHeader } },
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -71,21 +73,18 @@ serve(async (req) => {
           if (rpcError) {
             throw rpcError;
           }
+
+          // Destructure original doc, removing properties we will replace.
+          const { id, doc_number, created_at, customer, ...docData } = doc;
+
           const newInvoice = {
-            ...doc,
+            ...docData,
             issue_date: today.toISOString().split('T')[0],
             due_date: newDueDate.toISOString().split('T')[0],
             status: 'Draft', // Create as Draft first
             source_doc_id: doc.id, // Link back to the original recurring invoice
-            // Important: remove properties that should be unique for a new record
-            id: undefined,
             doc_number: nextDocNumber,
-            created_at: undefined,
           };
-          delete newInvoice.id;
-          delete newInvoice.customer; // Remove the nested customer object
-          delete newInvoice.activityLog; // Remove the activityLog property
-          delete newInvoice.created_at;
 
           // 3. Insert the new invoice into the database
           const { data: insertedData, error: insertError } = await supabaseAdmin
