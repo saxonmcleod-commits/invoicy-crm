@@ -9,12 +9,10 @@ console.log('Hello from handle-recurring-invoices!');
 serve(async (req) => {
   try {
     // Create a Supabase client with the Auth context of the service role
-    const authHeader = req.headers.get('Authorization')!;
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
-        global: { headers: { Authorization: authHeader } },
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -64,27 +62,30 @@ serve(async (req) => {
           const newDueDate = new Date(today);
           newDueDate.setDate(newDueDate.getDate() + 30); // Assuming net 30
 
-          // Call the database function to get the next sequential number
-          const { data: nextDocNumber, error: rpcError } = await supabaseAdmin.rpc(
-            'get_next_doc_number',
-            { doc_type: 'Invoice' }
-          );
-
-          if (rpcError) {
-            throw rpcError;
-          }
-
-          // Destructure original doc, removing properties we will replace.
-          const { id, doc_number, created_at, customer, activityLog, recurrence, ...docData } = doc; // Keep only this line
+          // Get all invoices to calculate the next sequential number
+          const { data: allInvoices } = await supabaseAdmin.from('documents').select('doc_number').eq('type', 'Invoice');
+          let maxNumber = 10000;
+          allInvoices?.forEach(inv => {
+            const num = parseInt(inv.doc_number.replace(/\D/g, ''), 10);
+            if (!isNaN(num) && num > maxNumber) maxNumber = num;
+          });
+          const nextDocNumber = `INV-${maxNumber + 1}`;
 
           const newInvoice = {
-            ...docData,
+            ...doc,
             issue_date: today.toISOString().split('T')[0],
             due_date: newDueDate.toISOString().split('T')[0],
             status: 'Draft', // Create as Draft first
-            source_doc_id: id, // Link back to the original recurring invoice using the destructured id
+            source_doc_id: doc.id, // Link back to the original recurring invoice
+            // Important: remove properties that should be unique for a new record
+            id: undefined,
             doc_number: nextDocNumber,
+            created_at: undefined,
           };
+          delete newInvoice.id;
+          delete newInvoice.customer; // Remove the nested customer object
+          delete newInvoice.activityLog; // Remove the activityLog property
+          delete newInvoice.created_at;
 
           // 3. Insert the new invoice into the database
           const { data: insertedData, error: insertError } = await supabaseAdmin

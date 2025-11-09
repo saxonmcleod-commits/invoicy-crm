@@ -227,14 +227,18 @@ const App: React.FC = () => {
 
         const { customer, activityLog, ...docData } = doc;
 
-        // Call the database function to get the next sequential number
-        const { data: nextDocNumber, error: rpcError } = await supabase.rpc('get_next_doc_number', {
-            doc_type: doc.type,
-        });
-
-        if (rpcError) {
-            console.error('Error getting next document number:', rpcError);
-            throw rpcError;
+        // New Sequential Numbering Logic
+        let nextDocNumber = '';
+        if (doc.type === DocumentType.Invoice) {
+            const userInvoices = documents.filter(d => d.user_id === session.user.id && d.type === DocumentType.Invoice);
+            let maxNumber = 10000;
+            userInvoices.forEach(inv => {
+                const num = parseInt(inv.doc_number.replace(/\D/g, ''), 10); // Strip non-digits
+                if (!isNaN(num) && num > maxNumber) maxNumber = num;
+            });
+            nextDocNumber = `INV-${maxNumber + 1}`;
+        } else {
+            nextDocNumber = `${doc.type.toUpperCase().slice(0,3)}-${Date.now().toString().slice(-6)}`;
         }
 
         const newDocForDb = {
@@ -269,23 +273,13 @@ const App: React.FC = () => {
     const addBusinessLetter = async (letter: NewBusinessLetterData) => {
         if (!session || !letter.customer) return;
 
-        const { customer, ...letterData } = letter;
-
-        // Call the database function to get the next sequential number
-        const { data: nextDocNumber, error: rpcError } = await supabase.rpc('get_next_doc_number', {
-            doc_type: 'Letter', // We'll need to update our DB function for this
-        });
-
-        if (rpcError) {
-            console.error('Error getting next document number for letter:', rpcError);
-            throw rpcError;
-        }
+        const { customer, ...letterData } = letter; // Separate customer from the rest of the data
         
         const newLetterForDb = {
             ...letterData,
             customer_id: letter.customer.id,
             user_id: session.user.id,
-            doc_number: nextDocNumber,
+            doc_number: `LTR-${Date.now().toString().slice(-6)}`
         };
 
         const { data, error } = await supabase.from('business_letters').insert(newLetterForDb).select('*, customer:customers(*)').single();
