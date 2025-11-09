@@ -3,7 +3,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { CalendarEvent, Task, Document } from '../types';
-import { useNavigate } from 'react-router-dom';
 
 type View = 'month' | 'week' | 'day' | 'agenda';
 
@@ -15,12 +14,10 @@ interface CalendarProps {
     addEvent: (event: Omit<CalendarEvent, 'id' | 'created_at' | 'user_id'>) => void;
     updateEvent: (event: CalendarEvent) => void;
     deleteEvent: (eventId: string) => void;
-    addTask: (task: Omit<Task, 'id' | 'completed' | 'created_at' | 'user_id'>) => void;
     updateTask: (task: Task) => void;
-    deleteTask: (taskId: string) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocument, addEvent, updateEvent, deleteEvent, addTask, updateTask, deleteTask }) => {
+const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocument, addEvent, updateEvent, deleteEvent, updateTask }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState<View>('month');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -184,7 +181,7 @@ const MonthView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], d
         for (let i = 0; i < firstDay; i++) daysArray.push({ date: null });
         for (let i = 1; i <= daysInMonth; i++) daysArray.push({ date: new Date(year, month, i) });
         return daysArray;
-    }, [date]);
+    }, []);
 
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 

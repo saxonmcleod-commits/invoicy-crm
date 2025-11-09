@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Customer, ProductivityPage, PageBlock, TableBlock, ChartBlock, Document, DocumentStatus, DocumentType, DocumentItem, Expense } from '../types';
 
 // TipTap Imports
-import { useEditor, EditorContent, FloatingMenu, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import Typography from '@tiptap/extension-typography';
@@ -28,7 +28,7 @@ const useDebounce = (value: any, delay: number) => {
 
 
 // --- SUB-COMPONENTS ---
-const EditorToolbar: React.FC<{ editor: any }> = ({ editor }) => {
+const EditorToolbar: React.FC<{ editor: ReturnType<typeof useEditor> | null }> = ({ editor }) => {
     if (!editor) return null;
     const items = [
         { id: 'bold', action: () => editor.chain().focus().toggleBold().run(), isActive: editor.isActive('bold'), icon: 'B' },
@@ -37,7 +37,7 @@ const EditorToolbar: React.FC<{ editor: any }> = ({ editor }) => {
         { id: 'h1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: editor.isActive('heading', { level: 1 }), icon: 'H1' },
         { id: 'h2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: editor.isActive('heading', { level: 2 }), icon: 'H2' },
         { id: 'h3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: editor.isActive('heading', { level: 3 }), icon: 'H3' },
-        { id: 'code', action: () => editor.chain().focus().toggleCode().run(), isActive: editor.isActive('code'), icon: '<>' },
+        { id: 'code', action: () => editor.chain().focus().toggleCode().run(), isActive: editor.isActive('code'), icon: '<>' as any },
     ];
     return (
         <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex items-center gap-1 bg-white dark:bg-zinc-800 p-1 rounded-lg shadow-lg border border-slate-200 dark:border-zinc-700">
@@ -58,7 +58,6 @@ const TableBlockComponent: React.FC<{ block: TableBlock; onUpdate: (block: PageB
     const addRow = () => onUpdate({ ...block, data: [...block.data, Array(block.data[0]?.length || 1).fill('')] });
     const addCol = () => onUpdate({ ...block, data: block.data.map(row => [...row, '']) });
     const removeRow = (index: number) => onUpdate({ ...block, data: block.data.filter((_, i) => i !== index) });
-    const removeCol = (index: number) => onUpdate({ ...block, data: block.data.map(row => row.filter((_, i) => i !== index)) });
 
     return (
         <div className="p-4 bg-white dark:bg-zinc-800/50 rounded-lg shadow-sm">
@@ -167,7 +166,7 @@ const PageContent: React.FC<{
         const handleClickOutside = (event: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsMenuOpen(false); };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [location.pathname]);
 
     const handleCreateExpense = () => {
         if (!editor) return;

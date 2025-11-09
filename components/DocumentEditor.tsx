@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Customer, Document, DocumentItem, DocumentType, DocumentStatus, TemplateInfo, CompanyInfo, Recurrence, Expense, NewDocumentData } from '../types';
+import { Customer, Document, DocumentItem, DocumentType, DocumentStatus, CompanyInfo, Recurrence, Expense, NewDocumentData } from '../types';
 import { TEMPLATES } from '../constants';
 import DocumentPreview from './DocumentPreview';
 import { generatePdf } from '../pdfGenerator';
@@ -336,7 +336,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                                             id="isRecurring" 
                                             checked={!!doc.recurrence} 
                                             onChange={e => {
-                                                const { recurrence, ...rest } = doc;
+                                                const { ...rest } = doc;
                                                 if (e.target.checked) {
                                                     setDoc({ ...rest, recurrence: { frequency: 'monthly' } });
                                                 } else {

@@ -39,12 +39,12 @@ export interface Customer {
   address: string;
   tags?: string[];
   preferences?: string[];
-  activityLog?: ActivityLog[]; 
+  activityLog?: ActivityLog[];
   created_at: string;
 }
 
 export interface DocumentItem {
-  id:string;
+  id: string;
   description: string;
   quantity: number;
   price: number;
@@ -104,9 +104,14 @@ export interface BusinessLetter {
 }
 
 // Overwrite the customer property to be nullable for new docs/letters before they're saved
-export type NewDocumentData = Omit<Document, 'id' | 'doc_number' | 'customer_id' | 'created_at' | 'user_id' | 'customer'> & { customer: Customer | null };
-export type NewBusinessLetterData = Omit<BusinessLetter, 'id' | 'doc_number' | 'customer_id' | 'created_at' | 'user_id' | 'customer'> & { customer: Customer | null };
-
+export type NewDocumentData = Omit<
+  Document,
+  'id' | 'doc_number' | 'customer_id' | 'created_at' | 'user_id' | 'customer'
+> & { customer: Customer | null };
+export type NewBusinessLetterData = Omit<
+  BusinessLetter,
+  'id' | 'doc_number' | 'customer_id' | 'created_at' | 'user_id' | 'customer'
+> & { customer: Customer | null };
 
 export interface TemplateInfo {
   id: string;
@@ -115,11 +120,11 @@ export interface TemplateInfo {
 }
 
 export interface CompanyInfo {
-    name: string;
-    address: string;
-    email: string;
-    abn?: string;
-    logo?: string;
+  name: string;
+  address: string;
+  email: string;
+  abn?: string;
+  logo?: string;
 }
 
 export interface CalendarEvent {
@@ -127,7 +132,7 @@ export interface CalendarEvent {
   user_id: string;
   title: string;
   start_time: string; // ISO string
-  end_time: string;   // ISO string
+  end_time: string; // ISO string
   color: string;
   meeting_link?: string;
   created_at: string;
@@ -168,33 +173,32 @@ export interface Expense {
 // ----- PRODUCTIVITY HUB V2 TYPES -----
 
 export interface TableBlock {
-    id: string;
-    type: 'table';
-    data: string[][];
+  id: string;
+  type: 'table';
+  data: string[][];
 }
 
 export interface ChartBlock {
-    id: string;
-    type: 'chart';
-    chartType: 'bar' | 'pie';
-    data: { label: string; value: number }[];
+  id: string;
+  type: 'chart';
+  chartType: 'bar' | 'pie';
+  data: { label: string; value: number }[];
 }
 
 export type PageBlock = TableBlock | ChartBlock;
 
 export interface ProductivityPage {
-    id: string;
-    user_id: string;
-    title: string;
-    icon?: string | null;
-    content: any; // Storing rich text content as JSON from an editor like TipTap
-    blocks: PageBlock[];
-    customer_id?: string | null;
-    created_at: string;
-    updated_at: string;
+  id: string;
+  user_id: string;
+  title: string;
+  icon?: string | null;
+  content: any; // Storing rich text content as JSON from an editor like TipTap
+  blocks: PageBlock[];
+  customer_id?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 // ----- END PRODUCTIVITY HUB V2 -----
-
 
 export interface ChatMessage {
   role: 'user' | 'model';
@@ -209,7 +213,7 @@ export interface ChatSession {
 }
 
 export interface ColorTheme {
-    name: string;
-    colors: { [key: string]: string; };
-    swatchColor: string;
+  name: string;
+  colors: { [key: string]: string };
+  swatchColor: string;
 }

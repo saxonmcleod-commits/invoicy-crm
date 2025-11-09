@@ -15,7 +15,7 @@ export const useAutoSave = <T>(key: string, data: T | null, interval = 3000) => 
       if (data === null) {
         return;
       }
-      
+
       const stringifiedData = JSON.stringify(data);
 
       // Only write to localStorage if the data has actually changed to avoid unnecessary writes.

@@ -86,7 +86,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ sessions, addSession, updateS
             const response: GenerateContentResponse = await chat.sendMessage({ message: userMessage.content });
             const modelMessage: ChatMessage = { role: 'model', content: response.text };
             
-            let finalSession = {
+            const finalSession = {
                 ...currentSession,
                 messages: [...updatedMessages, modelMessage]
             };

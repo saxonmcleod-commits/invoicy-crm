@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Customer, Document, DocumentStatus, DocumentType, CompanyInfo, ProductivityPage } from '../types';
+import { Link } from 'react-router-dom';
+import { Document, DocumentStatus, DocumentType, ProductivityPage } from '../types';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

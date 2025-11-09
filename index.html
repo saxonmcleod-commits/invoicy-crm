@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -24,34 +24,34 @@
                 800: 'rgb(var(--color-primary-800) / <alpha-value>)',
                 900: 'rgb(var(--color-primary-900) / <alpha-value>)',
                 950: 'rgb(var(--color-primary-950) / <alpha-value>)',
-              }
-            }
-          }
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "react": "https://aistudiocdn.com/react@^19.2.0",
+          "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.5",
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+          "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm",
+          "@tiptap/react": "https://aistudiocdn.com/@tiptap/react@^2.6.5",
+          "@tiptap/starter-kit": "https://aistudiocdn.com/@tiptap/starter-kit@^2.6.5",
+          "@tiptap/extension-highlight": "https://aistudiocdn.com/@tiptap/extension-highlight@^2.6.5",
+          "@tiptap/extension-typography": "https://aistudiocdn.com/@tiptap/extension-typography@^2.6.5",
+          "react-chartjs-2": "https://aistudiocdn.com/react-chartjs-2@^5.2.0",
+          "chart.js": "https://aistudiocdn.com/chart.js@^4.4.3",
+          "emoji-picker-react": "https://aistudiocdn.com/emoji-picker-react@^4.11.1"
         }
       }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.5",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
-    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm",
-    "@tiptap/react": "https://aistudiocdn.com/@tiptap/react@^2.6.5",
-    "@tiptap/starter-kit": "https://aistudiocdn.com/@tiptap/starter-kit@^2.6.5",
-    "@tiptap/extension-highlight": "https://aistudiocdn.com/@tiptap/extension-highlight@^2.6.5",
-    "@tiptap/extension-typography": "https://aistudiocdn.com/@tiptap/extension-typography@^2.6.5",
-    "react-chartjs-2": "https://aistudiocdn.com/react-chartjs-2@^5.2.0",
-    "chart.js": "https://aistudiocdn.com/chart.js@^4.4.3",
-    "emoji-picker-react": "https://aistudiocdn.com/emoji-picker-react@^4.11.1"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
   <body class="bg-slate-100 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

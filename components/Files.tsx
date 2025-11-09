@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Document, BusinessLetter, DocumentStatus, CompanyInfo, DocumentType } from '../types';
-import { generatePdf, generateLetterPdf } from '../pdfGenerator';
+import { Document, BusinessLetter, DocumentStatus, DocumentType } from '../types';
 
 interface FilesProps {
     documents: Document[];
@@ -56,7 +55,7 @@ const StatusSelector: React.FC<{ doc: Document, updateDocument: (doc: Document) 
 type FileItem = (Document | BusinessLetter) & { fileType: 'Document' | 'BusinessLetter' };
 type ItemToDelete = { id: string; doc_number: string; fileType: 'Document' | 'BusinessLetter'; };
 
-const Files: React.FC<FilesProps> = ({ documents, businessLetters, companyInfo, editDocument, editLetter, updateDocument, updateBusinessLetter, deleteDocument, deleteBusinessLetter, searchTerm }) => {
+const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument, editLetter, updateDocument, updateBusinessLetter, deleteDocument, deleteBusinessLetter, searchTerm }) => {
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [showArchived, setShowArchived] = useState(false);
     
@@ -107,8 +106,6 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, companyInfo, 
         }
     };
 
-    const activeItem = useMemo(() => activeMenu ? allFiles.find(item => item.id === activeMenu.id) : null, [activeMenu, allFiles]);
-
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
@@ -120,31 +117,6 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, companyInfo, 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-
-    const handleArchiveToggle = (item: FileItem) => {
-        if (item.fileType === 'Document') {
-            updateDocument({ ...(item as Document), archived: !item.archived });
-        } else {
-            updateBusinessLetter({ ...(item as BusinessLetter), archived: !item.archived });
-        }
-        setActiveMenu(null);
-    };
-
-    const handleDeleteClick = (item: FileItem) => {
-        setItemToDelete({ id: item.id, doc_number: item.doc_number, fileType: item.fileType });
-        setActiveMenu(null);
-    };
-
-    const confirmDelete = () => {
-        if (itemToDelete) {
-            if (itemToDelete.fileType === 'Document') {
-                deleteDocument(itemToDelete.id);
-            } else {
-                deleteBusinessLetter(itemToDelete.id);
-            }
-            setItemToDelete(null);
-        }
-    };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

@@ -1,5 +1,5 @@
 // Fix: Import `useMemo` from React to resolve the "Cannot find name 'useMemo'" error.
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Customer, Document, CompanyInfo, BusinessLetter, CalendarEvent, EmailTemplate, Expense, Profile, NewDocumentData, NewBusinessLetterData, ActivityLog, ProductivityPage, Task } from './types';
 import { THEMES } from './constants';
@@ -57,55 +57,7 @@ const App: React.FC = () => {
 
     const isEditorPage = location.pathname.includes('/editor') || location.pathname.includes('/letter-editor');
 
-    // Theme and Dark Mode Effect
-    useEffect(() => {
-        const root = window.document.documentElement;
-        isDarkMode ? root.classList.add('dark') : root.classList.remove('dark');
-        const selectedTheme = THEMES.find(t => t.name === theme) || THEMES[0];
-        Object.entries(selectedTheme.colors).forEach(([key, value]) => {
-            root.style.setProperty(`--color-primary-${key}`, value);
-        });
-    }, [isDarkMode, theme]);
-
-    // Data Fetching Effect
-    useEffect(() => {
-        if (session) {
-            fetchData();
-        } else {
-            // Clear data on logout
-            setCustomers([]);
-            setDocuments([]);
-            setBusinessLetters([]);
-            setEvents([]);
-            setExpenses([]);
-            setEmailTemplates([]);
-            setActivityLogs([]);
-            setProductivityPages([]);
-            setTasks([]);
-            setProfile(null);
-            setCompanyInfo({ name: '', address: '', email: '' });
-            setCommonTags([]);
-        }
-    }, [session]);
-
-    // When profile is loaded, set settings states
-     useEffect(() => {
-        if (profile) {
-            setCompanyInfo({
-                name: profile.company_name || 'Your Company Inc.',
-                address: profile.company_address || '123 Business Rd',
-                email: profile.company_email || 'contact@yourcompany.com',
-                abn: profile.company_abn || '',
-                logo: profile.company_logo || '',
-            });
-            setIsDarkMode(profile.dark_mode ?? false);
-            setTheme(profile.color_theme || 'Blue');
-            setCommonTags(profile.common_tags || []);
-        }
-    }, [profile]);
-
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!session) return;
         try {
             const [
@@ -146,13 +98,67 @@ const App: React.FC = () => {
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    };
+    }, [session]);
+
+    // Theme and Dark Mode Effect
+    useEffect(() => {
+        const root = window.document.documentElement;
+        isDarkMode ? root.classList.add('dark') : root.classList.remove('dark');
+        const selectedTheme = THEMES.find(t => t.name === theme) || THEMES[0];
+        Object.entries(selectedTheme.colors).forEach(([key, value]) => {
+            root.style.setProperty(`--color-primary-${key}`, value);
+        });
+    }, [isDarkMode, theme]);
+
+    // Data Fetching Effect
+    useEffect(() => {
+        if (session) {
+            fetchData();
+        } else {
+            // Clear data on logout
+            setCustomers([]);
+            setDocuments([]);
+            setBusinessLetters([]);
+            setEvents([]);
+            setExpenses([]);
+            setEmailTemplates([]);
+            setActivityLogs([]);
+            setProductivityPages([]);
+            setTasks([]);
+            setProfile(null);
+            setCompanyInfo({ name: '', address: '', email: '' });
+            setCommonTags([]);
+        }
+    }, [session, fetchData]);
+
+    // When profile is loaded, set settings states
+     useEffect(() => {
+        if (profile) {
+            setCompanyInfo({
+                name: profile.company_name || 'Your Company Inc.',
+                address: profile.company_address || '123 Business Rd',
+                email: profile.company_email || 'contact@yourcompany.com',
+                abn: profile.company_abn || '',
+                logo: profile.company_logo || '',
+            });
+            setIsDarkMode(profile.dark_mode ?? false);
+            setTheme(profile.color_theme || 'Blue');
+            setCommonTags(profile.common_tags || []);
+        }
+    }, [profile]);
 
     // Reset search on navigation
     useEffect(() => {
         setGlobalSearchTerm('');
     }, [location.pathname]);
     
+    const customersWithLogs = useMemo(() => {
+        return customers.map(customer => ({
+            ...customer,
+            activityLog: activityLogs.filter(log => log.customer_id === customer.id)
+        }));
+    }, [customers, activityLogs]);
+
     // Generic update function for profile changes
     const updateProfile = async (updateData: Partial<Profile>) => {
         if (!session) return;
@@ -203,7 +209,7 @@ const App: React.FC = () => {
     };
 
     const updateCustomer = async (updatedCustomer: Customer) => {
-        const { activityLog, ...rest } = updatedCustomer;
+        const { ...rest } = updatedCustomer;
         const { data, error } = await supabase.from('customers').update(rest).eq('id', updatedCustomer.id).select().single();
         if (data) setCustomers(prev => prev.map(c => c.id === data.id ? data : c));
         else if (error) console.error("Error updating customer:", error);
@@ -219,7 +225,7 @@ const App: React.FC = () => {
     const addDocument = async (doc: NewDocumentData) => {
         if (!session || !doc.customer) return;
 
-        const { customer, ...docData } = doc;
+        const { ...docData } = doc;
         
         const newDocForDb = {
             ...docData,
@@ -238,7 +244,7 @@ const App: React.FC = () => {
     };
     
     const updateDocument = async (updatedDoc: Document) => { 
-        const { customer, ...docData } = updatedDoc;
+        const { ...docData } = updatedDoc;
         const { data, error } = await supabase.from('documents').update(docData).eq('id', updatedDoc.id).select('*, customer:customers(*)').single();
         if (data) setDocuments(prev => prev.map(d => d.id === data.id ? data as Document : d));
         else if (error) console.error("Error updating document:", error);
@@ -253,7 +259,7 @@ const App: React.FC = () => {
     const addBusinessLetter = async (letter: NewBusinessLetterData) => {
         if (!session || !letter.customer) return;
 
-        const { customer, ...letterData } = letter;
+        const { ...letterData } = letter;
         
         const newLetterForDb = {
             ...letterData,
@@ -271,7 +277,7 @@ const App: React.FC = () => {
         }
     };
     const updateBusinessLetter = async (updatedLetter: BusinessLetter) => { 
-        const { customer, ...letterData } = updatedLetter;
+        const { ...letterData } = updatedLetter;
         const { data, error } = await supabase.from('business_letters').update(letterData).eq('id', updatedLetter.id).select('*, customer:customers(*)').single();
         if (data) setBusinessLetters(prev => prev.map(l => l.id === data.id ? data as BusinessLetter : l));
         else if (error) console.error("Error updating letter:", error);
@@ -439,13 +445,6 @@ const App: React.FC = () => {
             </Routes>
         );
     }
-
-    const customersWithLogs = useMemo(() => {
-        return customers.map(customer => ({
-            ...customer,
-            activityLog: activityLogs.filter(log => log.customer_id === customer.id)
-        }));
-    }, [customers, activityLogs]);
 
     return (
         <div className="h-screen bg-slate-100 dark:bg-zinc-950 relative">

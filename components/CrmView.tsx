@@ -231,7 +231,7 @@ const CrmView: React.FC<CrmViewProps> = ({ customers, addCustomer, updateCustome
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
     const [formData, setFormData] = useState({ name: '', email: '', phone: '', address: '', tags: '' });
-    const [view, setView] = useState<ViewType>('all');
+    const [view] = useState<ViewType>('all');
     
     const [activeMenu, setActiveMenu] = useState<{ id: string; top: number; left: number; position: 'top' | 'bottom' } | null>(null);
     const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
@@ -249,7 +249,7 @@ const CrmView: React.FC<CrmViewProps> = ({ customers, addCustomer, updateCustome
     [customers]);
 
     const filteredCustomers = useMemo(() => {
-        let customersToFilter = sortedCustomers;
+        const customersToFilter = sortedCustomers;
 
         // Filter by search term
         if (!searchTerm.trim()) return customersToFilter;
@@ -259,7 +259,7 @@ const CrmView: React.FC<CrmViewProps> = ({ customers, addCustomer, updateCustome
             c.email.toLowerCase().includes(lowercasedFilter) ||
             (c.tags && c.tags.some(tag => tag.toLowerCase().includes(lowercasedFilter)))
         );
-    }, [sortedCustomers, searchTerm, view]);
+    }, [sortedCustomers, searchTerm]);
 
 
     React.useEffect(() => {
