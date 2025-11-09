@@ -225,13 +225,25 @@ const App: React.FC = () => {
     const addDocument = async (doc: NewDocumentData) => {
         if (!session || !doc.customer) return;
 
-        const { customer, ...docData } = doc; // Separate customer from the rest of the data
+        const { customer, activityLog, ...docData } = doc;
+
+        // New Sequential Numbering Logic
+        let nextDocNumber = docData.doc_number;
+        if (doc.type === DocumentType.Invoice) {
+            const userInvoices = documents.filter(d => d.user_id === session.user.id && d.type === DocumentType.Invoice);
+            let maxNumber = 10000;
+            userInvoices.forEach(inv => {
+                const num = parseInt(inv.doc_number, 10);
+                if (!isNaN(num) && num > maxNumber) maxNumber = num;
+            });
+            nextDocNumber = String(maxNumber + 1);
+        }
         
         const newDocForDb = {
             ...docData,
             customer_id: doc.customer.id,
             user_id: session.user.id,
-            doc_number: `${doc.type.toUpperCase().slice(0,3)}-${Date.now().toString().slice(-6)}`
+            doc_number: nextDocNumber,
         };
 
         const { data, error } = await supabase.from('documents').insert(newDocForDb).select('*, customer:customers(*)').single();

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Document, BusinessLetter, DocumentStatus, DocumentType } from '../types';
+import { Document, BusinessLetter, DocumentStatus, DocumentType, CompanyInfo } from '../types';
 
 interface FilesProps {
     documents: Document[];
@@ -54,10 +54,13 @@ const StatusSelector: React.FC<{ doc: Document, updateDocument: (doc: Document) 
 
 type FileItem = (Document | BusinessLetter) & { fileType: 'Document' | 'BusinessLetter' };
 type ItemToDelete = { id: string; doc_number: string; fileType: 'Document' | 'BusinessLetter'; };
+type SortOption = 'most-recent' | 'oldest' | 'last-edited';
 
 const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument, editLetter, updateDocument, updateBusinessLetter, deleteDocument, deleteBusinessLetter, searchTerm }) => {
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [showArchived, setShowArchived] = useState(false);
+    const [sortOption, setSortOption] = useState<SortOption>('most-recent');
+    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     
     const [activeMenu, setActiveMenu] = useState<{ id: string; top: number; left: number; position: 'top' | 'bottom' } | null>(null);
     const [itemToDelete, setItemToDelete] = useState<ItemToDelete | null>(null);
@@ -68,8 +71,20 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
             ...documents.map(d => ({ ...d, fileType: 'Document' as const })),
             ...businessLetters.map(l => ({ ...l, fileType: 'BusinessLetter' as const }))
         ];
-        return combined.sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime());
-    }, [documents, businessLetters]);
+        
+        return combined.sort((a, b) => {
+            switch (sortOption) {
+                case 'oldest':
+                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                case 'last-edited':
+                    // Note: 'updated_at' needs to be added to your documents/letters tables and types
+                    return new Date((b as any).updated_at || b.created_at).getTime() - new Date((a as any).updated_at || a.created_at).getTime();
+                case 'most-recent':
+                default:
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            }
+        });
+    }, [documents, businessLetters, sortOption]);
 
     const filteredFiles = useMemo(() => {
         return allFiles.filter(item => {
@@ -86,6 +101,29 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
             return matchesSearch && matchesType && matchesArchived;
         });
     }, [allFiles, searchTerm, typeFilter, showArchived]);
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedItems(new Set(filteredFiles.map(f => f.id)));
+        } else {
+            setSelectedItems(new Set());
+        }
+    };
+
+    const handleSelectItem = (id: string) => {
+        setSelectedItems(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    const isAllSelected = filteredFiles.length > 0 && selectedItems.size === filteredFiles.length;
+
 
     const toggleMenu = (itemId: string, event: React.MouseEvent) => {
         event.stopPropagation();
@@ -118,6 +156,31 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const handleBulkArchive = () => {
+        selectedItems.forEach(id => {
+            const item = allFiles.find(f => f.id === id);
+            if (item) {
+                if (item.fileType === 'Document') {
+                    updateDocument({ ...(item as Document), archived: true });
+                } else {
+                    updateBusinessLetter({ ...(item as BusinessLetter), archived: true });
+                }
+            }
+        });
+        setSelectedItems(new Set());
+    };
+
+    const handleBulkDelete = () => {
+        if (window.confirm(`Are you sure you want to delete ${selectedItems.size} items? This action cannot be undone.`)) {
+            selectedItems.forEach(id => {
+                const item = allFiles.find(f => f.id === id);
+                if (item?.fileType === 'Document') deleteDocument(id);
+                if (item?.fileType === 'BusinessLetter') deleteBusinessLetter(id);
+            });
+            setSelectedItems(new Set());
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     }
@@ -125,17 +188,30 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
     return (
         <div className="space-y-6 h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
             <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                      <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full sm:w-auto p-2 border rounded-md bg-white dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option value="all">All Types</option>
                         <option value={DocumentType.Invoice}>Invoice</option>
                         <option value={DocumentType.Quote}>Quote</option>
                         <option value="BusinessLetter">Business Letter</option>
                     </select>
-                    <label className="flex-1 flex items-center gap-2 cursor-pointer p-2 rounded-md">
+                    <select value={sortOption} onChange={e => setSortOption(e.target.value as SortOption)} className="w-full sm:w-auto p-2 border rounded-md bg-white dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="most-recent">Sort: Most Recent</option>
+                        <option value="oldest">Sort: Oldest</option>
+                        <option value="last-edited">Sort: Last Edited</option>
+                    </select>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-md">
                         <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
                         <span className="text-sm font-medium">Show Archived</span>
                     </label>
+                    <div className="flex-1 flex justify-end gap-2">
+                        {selectedItems.size > 0 && (
+                            <>
+                                <button onClick={handleBulkArchive} className="px-3 py-2 text-sm font-semibold rounded-lg bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Archive</button>
+                                <button onClick={handleBulkDelete} className="px-3 py-2 text-sm font-semibold rounded-lg bg-red-100 text-red-800 hover:bg-red-200">Delete</button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -143,6 +219,14 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
                  <table className="w-full text-left min-w-[800px]">
                     <thead className="text-xs text-slate-500 dark:text-zinc-400 uppercase border-b border-slate-200 dark:border-zinc-800">
                         <tr>
+                            <th className="py-3 pr-3 w-12">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isAllSelected}
+                                    onChange={handleSelectAll}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                />
+                            </th>
                             <th className="py-3 pr-3">Number</th>
                             <th className="py-3 px-3">Customer</th>
                             <th className="py-3 px-3">Type</th>
@@ -155,6 +239,14 @@ const Files: React.FC<FilesProps> = ({ documents, businessLetters, editDocument,
                     <tbody>
                         {filteredFiles.map(item => (
                             <tr key={item.id} className={`border-b border-slate-200 dark:border-zinc-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-opacity ${item.archived ? 'opacity-50' : ''}`}>
+                                <td className="py-3 pr-3">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedItems.has(item.id)}
+                                        onChange={() => handleSelectItem(item.id)}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    />
+                                </td>
                                 <td className="py-3 pr-3 font-medium">
                                     <div className="flex items-center gap-2">
                                         {item.archived && <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400 dark:text-zinc-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><title>Archived</title><path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>}

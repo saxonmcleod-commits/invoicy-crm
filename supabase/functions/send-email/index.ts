@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     // 1. Get the data from the request body
-    const { to, subject, body } = await req.json();
+    const { to, subject, body, attachment } = await req.json();
 
     // 2. Get the secret API key from the environment
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -36,6 +36,7 @@ serve(async (req) => {
         to: to,
         subject: subject,
         html: body, // Using 'html' allows for better formatting
+        attachments: attachment ? [attachment] : undefined,
       }),
     });
 

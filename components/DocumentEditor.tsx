@@ -145,8 +145,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
     const currentDocument = useMemo(() => {
         const baseDoc = { ...doc };
         if (!('id' in baseDoc) || baseDoc.id === 'preview-id') {
-            (baseDoc as Document).id = 'preview-id';
-            (baseDoc as Document).doc_number = `${baseDoc.type.toUpperCase()}-XXXX`;
+            (baseDoc as Document).id = 'preview-id'; // Keep a temporary ID for preview
+            (baseDoc as Document).doc_number = '...'; // Placeholder text
         }
         return baseDoc as Document;
     }, [doc]);

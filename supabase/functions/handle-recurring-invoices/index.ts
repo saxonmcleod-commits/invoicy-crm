@@ -23,7 +23,7 @@ serve(async (req) => {
     // 1. Fetch all documents that are recurring
     const { data: recurringDocs, error: fetchError } = await supabaseAdmin
       .from('documents')
-      .select('*, customer:customers(*)') // Also fetch customer details
+      .select('*, customer:customers!inner(*)') // Also fetch customer details, ensuring customer is not null
       .not('recurrence', 'is', null);
 
     if (fetchError) {
@@ -37,93 +37,106 @@ serve(async (req) => {
     for (const doc of recurringDocs) {
       const issueDate = new Date(doc.issue_date);
 
-      // Simple check: Does the day of the month match?
-      // A more robust solution would handle different frequencies and edge cases.
-      const shouldCreateToday = doc.recurrence.frequency === 'monthly' && issueDate.getDate() === today.getDate();
+      // Check if it's the right day of the month to potentially create an invoice
+      if (doc.recurrence.frequency === 'monthly' && issueDate.getDate() === today.getDate()) {
+        // Now, check if an invoice for this recurring series has already been created this month.
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-      // Prevent creating an invoice on the same day the original was created.
-      const isSameDayAsOriginal =
-        issueDate.getFullYear() === today.getFullYear() &&
-        issueDate.getMonth() === today.getMonth() &&
-        issueDate.getDate() === today.getDate();
-
-      if (shouldCreateToday && !isSameDayAsOriginal) {
-        // It's the right day of the month to create a new invoice.
-        if (!doc.customer) {
-          console.warn(`Skipping recurring invoice ${doc.doc_number} because it has no customer.`);
-          continue;
-        }
-
-        // We'll create a copy of the original, but with new dates.
-        const newDueDate = new Date(today);
-        newDueDate.setDate(newDueDate.getDate() + 30); // Assuming net 30
-
-        const newInvoice = {
-          ...doc,
-          issue_date: today.toISOString().split('T')[0],
-          due_date: newDueDate.toISOString().split('T')[0],
-          status: 'Draft', // Create as Draft first
-          // Important: remove properties that should be unique for a new record
-          id: undefined,
-          doc_number: `INV-${Date.now().toString().slice(-6)}`,
-          created_at: undefined,
-        };
-        delete newInvoice.id;
-        delete newInvoice.customer; // Remove the nested customer object
-        delete newInvoice.created_at;
-
-        // 3. Insert the new invoice into the database
-        const { data: insertedData, error: insertError } = await supabaseAdmin
+        const { count: existingInvoiceCount, error: checkError } = await supabaseAdmin
           .from('documents')
-          .insert(newInvoice)
-          .select()
-          .single();
+          .select('id', { count: 'exact', head: true })
+          .eq('source_doc_id', doc.id) // Assuming you have a column to track the source
+          .gte('issue_date', startOfMonth.toISOString())
+          .lte('issue_date', endOfMonth.toISOString());
 
-        if (insertError) {
-          console.error(`Failed to insert new invoice for ${doc.doc_number}:`, insertError);
-          continue; // Skip to the next recurring doc
-        }
-
-        // 4. Get company info to pass to PDF generator
-        const { data: profile } = await supabaseAdmin.from('profiles').select('*').single();
-        const companyInfo = {
-          name: profile?.company_name || 'Your Company',
-          address: profile?.company_address || '',
-          email: profile?.company_email || '',
-          abn: profile?.company_abn || '',
-          logo: profile?.company_logo || '',
-        };
-
-        // 5. Invoke the PDF generation function
-        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke(
-          'generate-invoice-pdf',
-          { body: { invoiceData: { ...insertedData, customer: doc.customer }, companyInfo } }
-        );
-
-        if (pdfError) {
-          console.error(`Failed to generate PDF for ${insertedData.doc_number}:`, pdfError);
+        if (checkError) {
+          console.error(`Error checking for existing invoices for ${doc.doc_number}:`, checkError);
           continue;
         }
 
-        // 6. Invoke the email function with the PDF as an attachment
-        const { error: emailError } = await supabaseAdmin.functions.invoke('send-email', {
-          body: {
-            to: doc.customer.email,
-            subject: `New Invoice ${insertedData.doc_number} from ${companyInfo.name}`,
-            body: `Hi ${doc.customer.name},\n\nPlease find your latest invoice attached.\n\nThank you!`,
-            attachment: {
-              filename: `${insertedData.doc_number}.pdf`,
-              content: btoa(new Uint8Array(pdfData).reduce((data, byte) => data + String.fromCharCode(byte), '')), // Convert ArrayBuffer to base64
+        // If no invoice was found for this month, we can create one.
+        if (existingInvoiceCount === 0) {
+
+          // We'll create a copy of the original, but with new dates.
+          const newDueDate = new Date(today);
+          newDueDate.setDate(newDueDate.getDate() + 30); // Assuming net 30
+
+          const newInvoice = {
+            ...doc,
+            issue_date: today.toISOString().split('T')[0],
+            due_date: newDueDate.toISOString().split('T')[0],
+            status: 'Draft', // Create as Draft first
+            source_doc_id: doc.id, // Link back to the original recurring invoice
+            // Important: remove properties that should be unique for a new record
+            id: undefined,
+            doc_number: `INV-${Date.now().toString().slice(-6)}`,
+            created_at: undefined,
+          };
+          delete newInvoice.id;
+          delete newInvoice.customer; // Remove the nested customer object
+          delete newInvoice.activityLog; // Remove the activityLog property
+          delete newInvoice.created_at;
+
+          // 3. Insert the new invoice into the database
+          const { data: insertedData, error: insertError } = await supabaseAdmin
+            .from('documents')
+            .insert(newInvoice)
+            .select('*') // This is the fix! Get all columns of the new invoice.
+            .single();
+
+          if (insertError) {
+            console.error(`Failed to insert new invoice for ${doc.doc_number}:`, insertError);
+            continue; // Skip to the next recurring doc
+          }
+
+          // 4. Get company info to pass to PDF generator
+          const { data: profile } = await supabaseAdmin.from('profiles').select('*').eq('id', doc.user_id).single();
+          const companyInfo = {
+            name: profile?.company_name || 'Your Company',
+            address: profile?.company_address || '',
+            email: profile?.company_email || '',
+            abn: profile?.company_abn || '',
+            logo: profile?.company_logo || '',
+          };
+
+          // 5. Invoke the PDF generation function
+          const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke(
+            'generate-invoice-pdf',
+            { body: { invoiceData: { ...insertedData, customer: doc.customer }, companyInfo } }
+          );
+
+          if (pdfError) {
+            console.error(`Failed to generate PDF for ${insertedData.doc_number}:`, pdfError);
+            continue;
+          }
+
+          // 6. Invoke the email function with the PDF as an attachment
+          // We need to convert the ArrayBuffer from the PDF function into a base64 string for the email attachment.
+          const pdfBase64 = btoa(new Uint8Array(pdfData).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+
+          const { error: emailError } = await supabaseAdmin.functions.invoke('send-email', {
+            body: {
+              to: doc.customer.email,
+              subject: `New Invoice ${insertedData.doc_number} from ${companyInfo.name}`,
+              body: `Hi ${doc.customer.name},\n\nPlease find your latest invoice attached.\n\nThank you!`,
+              attachment: {
+                filename: `${insertedData.doc_number}.pdf`,
+                content: pdfBase64,
+              },
             },
-          },
-        });
+          });
 
-        if (emailError) {
-          console.error(`Failed to email PDF for ${insertedData.doc_number}:`, emailError);
-          continue;
+          if (emailError) {
+            console.error(`Failed to email PDF for ${insertedData.doc_number}:`, emailError);
+            continue;
+          }
+
+          createdInvoices.push(insertedData.doc_number);
+
+          // 7. Update the new invoice's status to 'Sent'
+          await supabaseAdmin.from('documents').update({ status: 'Sent' }).eq('id', insertedData.id);
         }
-
-        createdInvoices.push(insertedData.doc_number);
       }
     }
 
