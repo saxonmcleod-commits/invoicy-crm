@@ -5,6 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Customer, Document, BusinessLetter, ActivityLog, EmailTemplate, CompanyInfo } from '../types';
+import { supabase } from '../supabaseClient';
 
 
 // --- New Email Modal Component (Phase 3) ---
@@ -63,15 +64,17 @@ const EmailModal: React.FC<{
         setIsLoading(true);
         setStatusMessage('Sending...');
 
-        // --- SIMULATION-ONLY CHANGE ---
-        // In a real Supabase environment, you would call your Edge Function here.
-        // This is a mocked success response for the simulated environment which cannot
-        // run backend functions. To use this in production, you'd need to deploy your
-        // Supabase function and set the RESEND_API_KEY secret in your project settings.
-        setTimeout(() => {
-            console.log('Simulating successful email send.');
+        try {
+            const { error } = await supabase.functions.invoke('send-email', {
+                body: {
+                    to: customer.email,
+                    subject: subject.trim(),
+                    body: body.trim(),
+                },
+            });
 
-            // On success, automatically log the activity
+            if (error) throw error;
+
             addActivityLog({
                 customer_id: customer.id,
                 type: 'Email',
@@ -79,12 +82,13 @@ const EmailModal: React.FC<{
                 date: new Date().toISOString(),
                 subject: subject,
             });
-
             setStatusMessage('Email sent successfully!');
-            setIsLoading(false);
             setTimeout(onClose, 1500);
-
-        }, 1200); // Simulate a network delay
+        } catch (error) {
+            setStatusMessage(`Error: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
