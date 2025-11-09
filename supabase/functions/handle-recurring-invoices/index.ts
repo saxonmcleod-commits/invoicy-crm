@@ -69,6 +69,7 @@ serve(async (req) => {
           created_at: undefined,
         };
         delete newInvoice.id;
+        delete newInvoice.customer; // Remove the nested customer object
         delete newInvoice.created_at;
 
         // 3. Insert the new invoice into the database

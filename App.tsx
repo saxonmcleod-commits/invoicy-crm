@@ -225,7 +225,7 @@ const App: React.FC = () => {
     const addDocument = async (doc: NewDocumentData) => {
         if (!session || !doc.customer) return;
 
-        const { ...docData } = doc;
+        const { customer, ...docData } = doc; // Separate customer from the rest of the data
         
         const newDocForDb = {
             ...docData,
@@ -244,7 +244,7 @@ const App: React.FC = () => {
     };
     
     const updateDocument = async (updatedDoc: Document) => { 
-        const { ...docData } = updatedDoc;
+        const { customer, ...docData } = updatedDoc; // Separate customer from the rest of the data
         const { data, error } = await supabase.from('documents').update(docData).eq('id', updatedDoc.id).select('*, customer:customers(*)').single();
         if (data) setDocuments(prev => prev.map(d => d.id === data.id ? data as Document : d));
         else if (error) console.error("Error updating document:", error);
@@ -259,7 +259,7 @@ const App: React.FC = () => {
     const addBusinessLetter = async (letter: NewBusinessLetterData) => {
         if (!session || !letter.customer) return;
 
-        const { ...letterData } = letter;
+        const { customer, ...letterData } = letter; // Separate customer from the rest of the data
         
         const newLetterForDb = {
             ...letterData,
@@ -277,7 +277,7 @@ const App: React.FC = () => {
         }
     };
     const updateBusinessLetter = async (updatedLetter: BusinessLetter) => { 
-        const { ...letterData } = updatedLetter;
+        const { customer, ...letterData } = updatedLetter; // Separate customer from the rest of the data
         const { data, error } = await supabase.from('business_letters').update(letterData).eq('id', updatedLetter.id).select('*, customer:customers(*)').single();
         if (data) setBusinessLetters(prev => prev.map(l => l.id === data.id ? data as BusinessLetter : l));
         else if (error) console.error("Error updating letter:", error);
