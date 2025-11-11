@@ -3,7 +3,7 @@ import { CompanyInfo, EmailTemplate } from '../types';
 import { supabase } from '../supabaseClient';
 import { THEMES } from '../constants';
 
-// ... (TemplateModal component remains unchanged, no need to copy it here) ...
+// --- TemplateModal (unchanged) ---
 interface TemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -258,6 +258,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
     </div>
   );
 };
+// --- End of TemplateModal ---
 
 
 interface SettingsProps {
@@ -294,16 +295,21 @@ const Settings: React.FC<SettingsProps> = ({
       if (profile && profile.stripe_account_id && !profile.stripe_account_setup_complete) {
         setStripeLoading(true);
         try {
-          // *** FIX 1: Get session to pass the auth token ***
+          // ***
+          // *** FIX #1: Get the user's session to get the auth token
+          // ***
           const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return;
+          if (!session) return; // Not logged in, so can't check
           
-          // *** FIX 2: Pass the Authorization header ***
+          // ***
+          // *** FIX #2: Manually pass the Authorization header to the function call
+          // ***
           await supabase.functions.invoke('check-stripe-account-status', {
              headers: {
                 'Authorization': `Bearer ${session.access_token}`
              }
           });
+          // The profile will auto-update via the listener in App.tsx
         } catch (error) {
           console.error("Error checking Stripe status:", error);
         } finally {
@@ -314,8 +320,7 @@ const Settings: React.FC<SettingsProps> = ({
     checkStripeStatus();
   }, [profile]);
 
-  // Create a local state that is only updated when the props change,
-  // allowing for immediate user feedback in the UI.
+  // Local state for immediate UI feedback on form inputs
   const [localCompanyInfo, setLocalCompanyInfo] = useState(companyInfo);
   useEffect(() => {
     setLocalCompanyInfo(companyInfo);
@@ -329,7 +334,7 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const handleBlur = () => {
-    // Only call the expensive database update when the user is done editing a field.
+    // Update the "real" state on blur, which triggers the DB update in App.tsx
     setCompanyInfo(localCompanyInfo);
   };
 
@@ -379,8 +384,9 @@ const Settings: React.FC<SettingsProps> = ({
         throw new Error("User not logged in.");
       }
 
-      // 2. Call the function WITH the Authorization header
-      // *** FIX 3: Pass the Authorization header ***
+      // ***
+      // *** FIX #3: Manually pass the Authorization header to this function call too
+      // ***
       const { data, error } = await supabase.functions.invoke('create-stripe-account-link', {
         headers: {
             'Authorization': `Bearer ${session.access_token}`
@@ -389,7 +395,7 @@ const Settings: React.FC<SettingsProps> = ({
       
       if (error) throw error;
       if (data.url) {
-        window.location.href = data.url;
+        window.location.href = data.url; // Redirect to Stripe onboarding
       }
     } catch (error) {
       console.error('Error connecting to Stripe:', error);
@@ -398,12 +404,14 @@ const Settings: React.FC<SettingsProps> = ({
       setStripeLoading(false);
     }
   };
+  
   const isStripeConnected = profile?.stripe_account_id && profile?.stripe_account_setup_complete;
 
   return (
     <div className="space-y-8 h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 flex flex-col gap-8">
+          {/* Color Theme Card */}
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
               Color Theme
@@ -424,6 +432,7 @@ const Settings: React.FC<SettingsProps> = ({
               ))}
             </div>
           </div>
+          {/* Company Logo Card */}
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
               Company Logo
@@ -460,6 +469,7 @@ const Settings: React.FC<SettingsProps> = ({
           </div>
         </div>
         <div className="lg:col-span-2 space-y-8">
+          {/* Company Details Card */}
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
               Your Company Details
@@ -521,6 +531,7 @@ const Settings: React.FC<SettingsProps> = ({
               </div>
             </div>
           </div>
+          {/* Email Templates Card */}
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-zinc-100">
@@ -555,6 +566,7 @@ const Settings: React.FC<SettingsProps> = ({
               )}
             </div>
           </div>
+          {/* Payment Gateway Card */}
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">Payment Gateway</h2>
             <div className="p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg">
@@ -563,7 +575,7 @@ const Settings: React.FC<SettingsProps> = ({
                   <p className="font-semibold text-green-600 dark:text-green-400">✓ Stripe Account Connected</p>
                   <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">You can now accept payments on your invoices.</p>
                   <button onClick={handleStripeConnect} disabled={stripeLoading} className="mt-4 w-full px-4 py-2 text-sm font-semibold rounded-lg bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 transition-colors">
-                    {stripeLoading ? 'Processing...' : 'Manage Stripe Account'}
+                    {stripeLoading ? 'Checking...' : 'Manage Stripe Account'}
                   </button>
                 </div>
               ) : (
