@@ -21,10 +21,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const { documentId } = await req.json();
+    const { documentId } = (await req.json()).body;
 
     const { data: document, error: docError } = await supabase
       .from('documents')
+
       .select('total, user_id')
       .eq('id', documentId)
       .single();
