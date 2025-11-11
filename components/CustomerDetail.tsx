@@ -3,6 +3,8 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Customer, Document, BusinessLetter, ActivityLog, EmailTemplate, CompanyInfo } from '../types';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext'; // *** IMPORT useAuth ***
+import { PREFERENCE_TAGS } from '../constants'; // *** IMPORT PREFERENCE_TAGS ***
+
 
 // --- New Email Modal Component (Phase 3) ---
 const EmailModal: React.FC<{
@@ -83,7 +85,9 @@ const EmailModal: React.FC<{
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error);
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to send email');
+            }
 
             addActivityLog({
                 customer_id: customer.id,
@@ -167,8 +171,6 @@ const ActivityIcon: React.FC<{ type: ActivityLog['type'] }> = ({ type }) => {
     };
     return <div className="absolute top-0 left-0 -ml-5 mt-1 h-10 w-10 flex items-center justify-center bg-white dark:bg-zinc-900 rounded-full border-2 border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400">{icons[type]}</div>;
 }
-
-const PREFERENCE_TAGS = ['Email', 'Call']; // Defined here since it's not exported from constants
 
 const PreferencesModal: React.FC<{
     customer: Customer | null;

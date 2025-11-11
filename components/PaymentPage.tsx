@@ -6,7 +6,6 @@ import { supabase } from '../supabaseClient';
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
-// IMPORTANT: Add your Stripe publishable key to your .env file
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
 const CheckoutForm = ({ documentId }: { documentId: string }) => {
@@ -29,8 +28,8 @@ const CheckoutForm = ({ documentId }: { documentId: string }) => {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        // This is the URL the user will be redirected to after payment.
-        return_url: `${window.location.origin}/payment-success?document_id=${documentId}`,
+        // *** FIX: Updated for HashRouter ***
+        return_url: `${window.location.origin}/#/payment-success?document_id=${documentId}`,
       },
     });
 
@@ -66,15 +65,27 @@ const PaymentPage: React.FC = () => {
 
     const createPaymentIntent = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { documentId },
+        // ***
+        // *** FIX: Call the Vercel function, not Supabase function
+        // ***
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ documentId }),
         });
-        if (error) throw error;
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create payment intent');
+        }
+        
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
         }
-      } catch (error) {
-        console.error("Error creating payment intent:", error);
+      } catch (error: any) {
+        console.error("Error creating payment intent:", error.message);
         // Handle error display for the user
       }
     };

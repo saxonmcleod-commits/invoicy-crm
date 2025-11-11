@@ -3,7 +3,7 @@ import { CompanyInfo, EmailTemplate } from '../types';
 import { supabase } from '../supabaseClient';
 import { THEMES } from '../constants';
 
-// --- TemplateModal (unchanged) ---
+// --- TemplateModal (unchanged from your file) ---
 interface TemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -295,21 +295,33 @@ const Settings: React.FC<SettingsProps> = ({
       if (profile && profile.stripe_account_id && !profile.stripe_account_setup_complete) {
         setStripeLoading(true);
         try {
-          // ***
-          // *** FIX #1: Get the user's session to get the auth token
-          // ***
           const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return; // Not logged in, so can't check
+          if (!session) return;
           
           // ***
-          // *** FIX #2: Manually pass the Authorization header to the function call
+          // *** FIX: Call the Vercel function, not Supabase function
           // ***
-          await supabase.functions.invoke('check-stripe-account-status', {
+          const response = await fetch('/api/check-stripe-account-status', {
+             method: 'GET',
              headers: {
                 'Authorization': `Bearer ${session.access_token}`
              }
           });
-          // The profile will auto-update via the listener in App.tsx
+          
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to check Stripe status');
+          }
+
+          // If setup is complete, trigger a profile refresh by updating the DB
+          // App.tsx's listener will pick this up
+          if (data.setupComplete) {
+            await supabase
+              .from('profiles')
+              .update({ stripe_account_setup_complete: true })
+              .eq('id', session.user.id);
+          }
+          
         } catch (error) {
           console.error("Error checking Stripe status:", error);
         } finally {
@@ -385,21 +397,26 @@ const Settings: React.FC<SettingsProps> = ({
       }
 
       // ***
-      // *** FIX #3: Manually pass the Authorization header to this function call too
+      // *** FIX: Call the Vercel function, not Supabase function
       // ***
-      const { data, error } = await supabase.functions.invoke('create-stripe-account-link', {
+      const response = await fetch('/api/create-stripe-account-link', {
+        method: 'POST',
         headers: {
             'Authorization': `Bearer ${session.access_token}`
         }
       });
       
-      if (error) throw error;
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create Stripe link');
+      }
+      
       if (data.url) {
         window.location.href = data.url; // Redirect to Stripe onboarding
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error connecting to Stripe:', error);
-      alert('Could not connect to Stripe. Please try again later.');
+      alert(`Could not connect to Stripe: ${error.message}`);
     } finally {
       setStripeLoading(false);
     }
