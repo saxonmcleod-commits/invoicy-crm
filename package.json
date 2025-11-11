@@ -19,12 +19,14 @@
     "@tiptap/extension-typography": "^2.6.5",
     "@tiptap/react": "^2.6.5",
     "@tiptap/starter-kit": "^2.6.5",
+    "@vercel/node": "^5.5.5",
     "chart.js": "^4.4.3",
     "emoji-picker-react": "^4.11.1",
     "react": "^19.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.5"
+    "react-router-dom": "^7.9.5",
+    "stripe": "^19.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

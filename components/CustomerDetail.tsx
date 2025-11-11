@@ -1,12 +1,8 @@
-
-
-
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Customer, Document, BusinessLetter, ActivityLog, EmailTemplate, CompanyInfo } from '../types';
 import { supabase } from '../supabaseClient';
-
+import { useAuth } from '../AuthContext'; // *** IMPORT useAuth ***
 
 // --- New Email Modal Component (Phase 3) ---
 const EmailModal: React.FC<{
@@ -21,6 +17,7 @@ const EmailModal: React.FC<{
     const [body, setBody] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
+    const { session } = useAuth(); // *** GET THE SESSION ***
 
     useEffect(() => {
         if (isOpen) {
@@ -61,19 +58,32 @@ const EmailModal: React.FC<{
             setStatusMessage('Subject and body cannot be empty.');
             return;
         }
+        if (!session) { // *** CHECK FOR SESSION ***
+            setStatusMessage('Error: Not authenticated.');
+            return;
+        }
         setIsLoading(true);
         setStatusMessage('Sending...');
 
         try {
-            const { error } = await supabase.functions.invoke('send-email', {
-                body: {
+            // ***
+            // *** FIX: Call the Vercel function, not Supabase function
+            // ***
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}` // *** PASS AUTH TOKEN ***
+                },
+                body: JSON.stringify({
                     to: customer.email,
                     subject: subject.trim(),
                     body: body.trim(),
-                },
+                }),
             });
 
-            if (error) throw error;
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error);
 
             addActivityLog({
                 customer_id: customer.id,
@@ -84,7 +94,7 @@ const EmailModal: React.FC<{
             });
             setStatusMessage('Email sent successfully!');
             setTimeout(onClose, 1500);
-        } catch (error) {
+        } catch (error: any) {
             setStatusMessage(`Error: ${error.message}`);
         } finally {
             setIsLoading(false);
@@ -157,6 +167,8 @@ const ActivityIcon: React.FC<{ type: ActivityLog['type'] }> = ({ type }) => {
     };
     return <div className="absolute top-0 left-0 -ml-5 mt-1 h-10 w-10 flex items-center justify-center bg-white dark:bg-zinc-900 rounded-full border-2 border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400">{icons[type]}</div>;
 }
+
+const PREFERENCE_TAGS = ['Email', 'Call']; // Defined here since it's not exported from constants
 
 const PreferencesModal: React.FC<{
     customer: Customer | null;
