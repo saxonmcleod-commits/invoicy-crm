@@ -29,6 +29,7 @@ serve(async (req) => {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) throw new Error('User not found');
+    if (!user.email) throw new Error('User email is missing.');
 
     // --- ROBUST PROFILE HANDLING ---
     // 1. Try to get the profile, use .maybeSingle() to prevent error if it doesn't exist
