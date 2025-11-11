@@ -1,16 +1,15 @@
+// supabase/functions/create-stripe-account-link/index.ts
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.22.0';
 import Stripe from 'https://esm.sh/stripe@12.5.0';
 import { corsHeaders } from '../_shared/cors.ts';
 
-// FIX 1: Use 'STRIPE_API_KEY' (from your Supabase secrets screenshot)
-// NOT 'VITE_STRIPE_API_KEY'
 const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
   apiVersion: '2022-11-15',
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-// FIX 3: Get the SITE_URL from your environment secrets
 const SITE_URL = Deno.env.get('SITE_URL');
 
 serve(async (req) => {
@@ -20,11 +19,16 @@ serve(async (req) => {
   }
 
   try {
-    // FIX 2: Use 'SUPABASE_URL' and 'SUPABASE_SERVICE_ROLE_KEY'
-    // (from your Supabase secrets screenshot)
+    //
+    // --- THIS IS THE FIX ---
+    //
+    // We must use the ANON key here so the client can
+    // correctly identify the user from the Authorization header.
+    // Using the SERVICE_ROLE_KEY conflicts with passing the user's auth.
+    //
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '', // Use ANON_KEY
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
@@ -50,6 +54,8 @@ serve(async (req) => {
       });
       accountId = account.id;
 
+      // This update will succeed because the user is authenticated
+      // and RLS policies should allow them to update their own profile.
       await supabase
         .from('profiles')
         .update({ stripe_account_id: accountId })
@@ -58,7 +64,6 @@ serve(async (req) => {
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      // FIX 3 (continued): Use the SITE_URL variable
       refresh_url: `${SITE_URL}/settings`,
       return_url: `${SITE_URL}/settings`,
       type: 'account_onboarding',
