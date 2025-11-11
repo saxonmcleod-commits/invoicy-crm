@@ -258,7 +258,6 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
     </div>
   );
 };
-// ... (TemplateModal component remains unchanged, no need to copy it here) ...
 
 
 interface SettingsProps {
