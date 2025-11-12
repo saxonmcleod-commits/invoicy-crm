@@ -6,11 +6,10 @@ const stripe = new Stripe(process.env.STRIPE_API_KEY as string, {
   apiVersion: '2022-11-15',
 });
 
-// Helper to set CORS headers
 const setCorsHeaders = (res: VercelResponse) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); // *** FIX: Allow POST ***
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -18,22 +17,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
     return res.status(200).send('ok');
   }
-  
-  // *** FIX: Explicitly handle POST or GET, reject others ***
-  if (req.method !== 'POST' && req.method !== 'GET') {
-    res.setHeader('Allow', 'POST, GET');
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
 
   try {
     if (!req.headers.authorization) {
-      console.error('No authorization header received.');
       return res.status(401).json({ error: 'No authorization header received.' });
     }
     
+    // *** FIX: Use the SERVICE_ROLE_KEY for admin actions ***
     const supabase = createClient(
       process.env.SUPABASE_URL ?? '',
-      process.env.SUPABASE_ANON_KEY ?? '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? '', // Use the secret key
       { global: { headers: { Authorization: req.headers.authorization! } } }
     );
 
@@ -44,7 +37,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: `Supabase auth error: ${authError.message}` });
     }
     if (!user) {
-      console.error('Supabase user not found. Token might be invalid or expired.');
       return res.status(401).json({ error: 'User not found. Invalid token.' });
     }
 

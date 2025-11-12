@@ -6,7 +6,6 @@ const stripe = new Stripe(process.env.STRIPE_API_KEY as string, {
   apiVersion: '2022-11-15',
 });
 
-// Helper to set CORS headers
 const setCorsHeaders = (res: VercelResponse) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type');
@@ -19,15 +18,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).send('ok');
   }
 
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
-
   try {
+    // *** FIX: Use the SERVICE_ROLE_KEY to read RLS-protected tables ***
     const supabase = createClient(
       process.env.SUPABASE_URL ?? '',
-      process.env.SUPABASE_ANON_KEY ?? ''
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? '' // Use the secret key
     );
 
     const { documentId } = req.body;
@@ -68,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ clientSecret: paymentIntent.client_secret });
   } catch (error: any) {
-    console.error('Full error in create-payment-intent:', error.message);
+    console.error(error);
     return res.status(500).json({ error: error.message });
   }
 }
