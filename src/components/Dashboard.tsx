@@ -148,7 +148,7 @@ const RevenueChart: React.FC<{
             {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
               tooltip.value
             )}
-          >
+            </p>
         </div>
       )}
     </div>
