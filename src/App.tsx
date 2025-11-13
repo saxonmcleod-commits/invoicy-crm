@@ -1,4 +1,3 @@
-// Fix: Import `useMemo` from React to resolve the "Cannot find name 'useMemo'" error.
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -35,8 +34,9 @@ import AuthPage from './components/Auth';
 import { useAuth } from './AuthContext';
 import { supabase } from './supabaseClient';
 import ProductivityHub from './components/ProductivityHub';
-import TagsModal from './components/TagsModal';
-import PreferencesModal from './components/PreferencesModal';
+// Note: We don't need these imports here, they are used in CrmView/CustomerDetail
+// import TagsModal from './components/TagsModal';
+// import PreferencesModal from './components/PreferencesModal';
 
 const App: React.FC = () => {
   const { session } = useAuth();
@@ -274,6 +274,13 @@ const App: React.FC = () => {
   const addDocument = async (doc: NewDocumentData) => {
     if (!session || !doc.customer) return;
 
+    // *** FIX: Check for Stripe ID *before* calling the function ***
+    // This was the logic error from before. We only check this for *new* invoices.
+    if (doc.type === DocumentType.Invoice && (!profile?.stripe_account_id || !profile.stripe_account_setup_complete)) {
+        setToast({ message: "Please connect your Stripe account in Settings before creating a payment link.", type: 'error' });
+        // We can still create the invoice, just without the link.
+    }
+
     const { customer, ...docData } = doc;
 
     // New Sequential Numbering Logic
@@ -330,9 +337,9 @@ const App: React.FC = () => {
       return; // Stop execution if document creation failed
     }
 
-    // *** MODIFIED PAYMENT LINK LOGIC ***
+    // *** NEW ROBUST PAYMENT LINK LOGIC ***
     // Check if user has a stripe account connected AND setup is complete
-    if (data && profile?.stripe_account_id && profile.stripe_account_setup_complete) {
+    if (data && doc.type === DocumentType.Invoice && profile?.stripe_account_id && profile.stripe_account_setup_complete) {
       try {
         const { data: functionData, error: functionError } = await supabase.functions.invoke(
           'create-payment-link',
@@ -346,8 +353,10 @@ const App: React.FC = () => {
           // This will catch network errors or if the function itself crashes (e.g., 500)
           throw functionError;
         }
+        
+        // This catches the JSON error we added to the backend function
+        // (e.g., "You must connect Stripe...")
         if (functionData.error) {
-          // This catches the JSON error we added to the backend function
           throw new Error(functionData.error);
         }
 
@@ -358,7 +367,7 @@ const App: React.FC = () => {
               d.id === data.id ? { ...d, stripe_payment_link: functionData.paymentLinkUrl } : d
             )
           );
-          setToast({ message: 'Invoice saved. Payment link added.', type: 'success' });
+          setToast({ message: 'Invoice saved and payment link added.', type: 'success' });
         }
       } catch (error: any) {
         console.error('Error invoking create-payment-link function:', error);
@@ -386,6 +395,7 @@ const App: React.FC = () => {
     if (data) {
       const newDoc = data as Document;
       setDocuments((prev) => prev.map((d) => (d.id === newDoc.id ? newDoc : d)));
+      setToast({ message: 'Document updated successfully.', type: 'success' }); // Added toast
 
       // After updating the document, update any linked expenses to 'billed'
       const expenseIdsToUpdate = newDoc.items.map((item) => item.sourceExpenseId).filter(Boolean) as string[];
@@ -456,10 +466,12 @@ const App: React.FC = () => {
       .eq('id', updatedLetter.id)
       .select('*, customer:customers(*)')
       .single();
-    if (data)
+    if (data) {
       setBusinessLetters((prev) =>
         prev.map((l) => (l.id === data.id ? (data as BusinessLetter) : l))
       );
+      setToast({ message: 'Letter updated successfully.', type: 'success' }); // Added toast
+    }
     else if (error) console.error('Error updating letter:', error);
   };
   const deleteBusinessLetter = async (letterId: string) => {
@@ -712,7 +724,6 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/auth" element={<Navigate to="/dashboard" />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
-              {/* FIX: Pass required 'documents' and 'editDocument' props to Dashboard component. */}
               <Route
                 path="/dashboard"
                 element={
@@ -769,8 +780,8 @@ const App: React.FC = () => {
                     updateBusinessLetter={updateBusinessLetter}
                     deleteDocument={deleteDocument}
                     deleteBusinessLetter={deleteBusinessLetter}
-                    bulkDeleteDocuments={bulkDeleteDocuments}
-                    bulkDeleteBusinessLetters={bulkDeleteBusinessLetters}
+                    bulkDeleteDocuments={bulkDeleteDocuments} // Pass prop
+                    bulkDeleteBusinessLetters={bulkDeleteBusinessLetters} // Pass prop
                     searchTerm={globalSearchTerm}
                   />
                 }
@@ -898,7 +909,7 @@ const App: React.FC = () => {
         customers={customers}
         initialData={initialExpenseData}
       />
-      
+
       {/* *** NEW: Toast Notification Component *** */}
       {toast && (
         <div
