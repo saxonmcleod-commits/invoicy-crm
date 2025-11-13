@@ -55,7 +55,7 @@ serve(async (req) => {
     }
 
     // 3. Initialize Stripe with your secret key
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
+    const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY')!, {
       apiVersion: '2022-11-15',
       httpClient: Stripe.createFetchHttpClient(),
     });
