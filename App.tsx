@@ -1,7 +1,7 @@
 // Fix: Import `useMemo` from React to resolve the "Cannot find name 'useMemo'" error.
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Customer, Document, CompanyInfo, BusinessLetter, CalendarEvent, EmailTemplate, Expense, Profile, NewDocumentData, NewBusinessLetterData, ActivityLog, ProductivityPage, Task } from './types';
+import { Customer, Document, CompanyInfo, BusinessLetter, CalendarEvent, EmailTemplate, Expense, Profile, NewDocumentData, NewBusinessLetterData, ActivityLog, ProductivityPage, Task, DocumentType } from './types';
 import { THEMES } from './constants';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -263,6 +263,26 @@ const App: React.FC = () => {
             }
         } else if (error) {
             console.error("Error adding document:", error);
+            return; // Stop execution if document creation failed
+        }
+
+        // If user has a stripe account connected, create a payment link
+        if (data && profile?.stripe_account_id) {
+            try {
+                const { data: functionData, error: functionError } = await supabase.functions.invoke('create-payment-link', {
+                    body: { invoice: data },
+                });
+
+                if (functionError) throw functionError;
+
+                // The function already saves the link, but we need to update our local state
+                // with the link so the UI can react if needed.
+                if (functionData.paymentLinkUrl) {
+                    setDocuments(prev => prev.map(d => d.id === data.id ? { ...d, stripe_payment_link: functionData.paymentLinkUrl } : d));
+                }
+            } catch (error) {
+                console.error("Error invoking create-payment-link function:", error);
+            }
         }
     };
     

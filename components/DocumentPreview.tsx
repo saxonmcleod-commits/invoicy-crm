@@ -33,6 +33,7 @@ const TemplateModern: React.FC<ExtendedPreviewProps> = ({
               </h1>
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-slate-500 mt-1">{document.doc_number}</p>
+              <p className="text-slate-500 mt-1">{document.doc_number || '...'}</p>
             </div>
             <div className="text-right">
               {companyInfo.logo && (
@@ -167,6 +168,7 @@ const TemplateClassic: React.FC<ExtendedPreviewProps> = ({
               {/* Fix: Changed docNumber to doc_number */}
               <p>
                 <span className="font-semibold text-gray-700">Number:</span> {document.doc_number}
+                <span className="font-semibold text-gray-700">Number:</span> {document.doc_number || '...'}
               </p>
               {/* Fix: Changed issueDate to issue_date */}
               <p>
@@ -289,6 +291,7 @@ const TemplateCreative: React.FC<ExtendedPreviewProps> = ({
               <h1 className="text-5xl font-extrabold text-cyan-400 uppercase">{document.type}</h1>
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-fuchsia-400">{document.doc_number}</p>
+              <p className="text-fuchsia-400">{document.doc_number || '...'}</p>
             </div>
           </header>
 
@@ -406,6 +409,7 @@ const TemplateMinimalist: React.FC<ExtendedPreviewProps> = ({
               </h1>
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-gray-500 mt-1">{document.doc_number}</p>
+              <p className="text-gray-500 mt-1">{document.doc_number || '...'}</p>
             </div>
           </header>
 
@@ -531,6 +535,7 @@ const TemplateBold: React.FC<ExtendedPreviewProps> = ({
                 <h1 className="text-5xl font-extrabold uppercase text-white">{document.type}</h1>
                 {/* Fix: Changed docNumber to doc_number */}
                 <p className="text-gray-300 mt-1">{document.doc_number}</p>
+                <p className="text-gray-300 mt-1">{document.doc_number || '...'}</p>
               </div>
             </div>
           </header>
@@ -759,6 +764,7 @@ const TemplateCorporate: React.FC<ExtendedPreviewProps> = ({
               <h1 className="text-4xl font-bold text-blue-700 uppercase">{document.type}</h1>
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-gray-500 mt-1">{document.doc_number}</p>
+              <p className="text-gray-500 mt-1">{document.doc_number || '...'}</p>
             </div>
           </header>
           <section className="grid grid-cols-2 gap-8 my-4">
@@ -883,6 +889,7 @@ const TemplateElegant: React.FC<ExtendedPreviewProps> = ({
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-gray-600">{document.doc_number}</p>
               {/* Fix: Changed issueDate to issue_date */}
+              <p className="text-gray-600">{document.doc_number || '...'}</p>
               <p className="mt-4">
                 <span className="font-semibold text-gray-600">Date:</span> {document.issue_date}
               </p>
@@ -982,6 +989,7 @@ const TemplateFriendly: React.FC<ExtendedPreviewProps> = ({
               <h1 className="text-4xl font-bold text-green-600 uppercase">{document.type}</h1>
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-gray-500">{document.doc_number}</p>
+              <p className="text-gray-500">{document.doc_number || '...'}</p>
             </div>
           </div>
           <section className="bg-green-50 rounded-xl p-6 grid grid-cols-2 gap-8">
@@ -1088,6 +1096,7 @@ const TemplateTechnical: React.FC<ExtendedPreviewProps> = ({
             {/* Fix: Changed docNumber to doc_number */}
             <p className="mt-4">
               <span className="text-sky-600">SUBJECT:</span> {document.type} #{document.doc_number}
+              <span className="text-sky-600">SUBJECT:</span> {document.type} #{document.doc_number || '...'}
             </p>
             {/* Fix: Changed issueDate to issue_date */}
             <p>
@@ -1189,6 +1198,7 @@ const TemplateEarthy: React.FC<ExtendedPreviewProps> = ({
               <h1 className="text-4xl font-bold text-stone-700 uppercase">{document.type}</h1>
               {/* Fix: Changed docNumber to doc_number */}
               <p className="text-stone-500">{document.doc_number}</p>
+              <p className="text-stone-500">{document.doc_number || '...'}</p>
             </div>
           </header>
           <section className="grid grid-cols-2 gap-8 my-4">
@@ -1306,6 +1316,7 @@ const TemplateSwiss: React.FC<ExtendedPreviewProps> = ({
               <h3 className="text-xs font-bold uppercase tracking-wider mb-2">Number</h3>
               {/* Fix: Changed docNumber to doc_number */}
               <p>{document.doc_number}</p>
+              <p>{document.doc_number || '...'}</p>
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider mb-2">Date</h3>
