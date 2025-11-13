@@ -34,9 +34,8 @@ import AuthPage from './components/Auth';
 import { useAuth } from './AuthContext';
 import { supabase } from './supabaseClient';
 import ProductivityHub from './components/ProductivityHub';
-// Note: We don't need these imports here, they are used in CrmView/CustomerDetail
-// import TagsModal from './components/TagsModal';
-// import PreferencesModal from './components/PreferencesModal';
+// import TagsModal from './components/TagsModal'; // No longer needed here
+// import PreferencesModal from './components/PreferencesModal'; // No longer needed here
 
 const App: React.FC = () => {
   const { session } = useAuth();
@@ -274,11 +273,16 @@ const App: React.FC = () => {
   const addDocument = async (doc: NewDocumentData) => {
     if (!session || !doc.customer) return;
 
-    // *** FIX: Check for Stripe ID *before* calling the function ***
-    // This was the logic error from before. We only check this for *new* invoices.
-    if (doc.type === DocumentType.Invoice && (!profile?.stripe_account_id || !profile.stripe_account_setup_complete)) {
-        setToast({ message: "Please connect your Stripe account in Settings before creating a payment link.", type: 'error' });
-        // We can still create the invoice, just without the link.
+    // Check for Stripe ID *before* calling the function
+    if (
+      doc.type === DocumentType.Invoice &&
+      (!profile?.stripe_account_id || !profile.stripe_account_setup_complete)
+    ) {
+      setToast({
+        message: 'Please connect your Stripe account in Settings before creating a payment link.',
+        type: 'error',
+      });
+      // We can still create the invoice, just without the link.
     }
 
     const { customer, ...docData } = doc;
@@ -337,9 +341,14 @@ const App: React.FC = () => {
       return; // Stop execution if document creation failed
     }
 
-    // *** NEW ROBUST PAYMENT LINK LOGIC ***
+    // NEW ROBUST PAYMENT LINK LOGIC
     // Check if user has a stripe account connected AND setup is complete
-    if (data && doc.type === DocumentType.Invoice && profile?.stripe_account_id && profile.stripe_account_setup_complete) {
+    if (
+      data &&
+      doc.type === DocumentType.Invoice &&
+      profile?.stripe_account_id &&
+      profile.stripe_account_setup_complete
+    ) {
       try {
         const { data: functionData, error: functionError } = await supabase.functions.invoke(
           'create-payment-link',
@@ -348,19 +357,14 @@ const App: React.FC = () => {
           }
         );
 
-        // This is the new, more robust error handling
         if (functionError) {
-          // This will catch network errors or if the function itself crashes (e.g., 500)
           throw functionError;
         }
-        
-        // This catches the JSON error we added to the backend function
-        // (e.g., "You must connect Stripe...")
+
         if (functionData.error) {
           throw new Error(functionData.error);
         }
 
-        // The function already saves the link, but we need to update our local state
         if (functionData.paymentLinkUrl) {
           setDocuments((prev) =>
             prev.map((d) =>
@@ -371,17 +375,23 @@ const App: React.FC = () => {
         }
       } catch (error: any) {
         console.error('Error invoking create-payment-link function:', error);
-        // Show the user the error!
-        setToast({ message: `Invoice saved, but failed to create payment link: ${error.message}`, type: 'error' });
+        setToast({
+          message: `Invoice saved, but failed to create payment link: ${error.message}`,
+          type: 'error',
+        });
       }
-    } else if (data && doc.type === DocumentType.Invoice && (!profile?.stripe_account_id || !profile.stripe_account_setup_complete)) {
-      // New logic: If they saved an invoice but haven't connected Stripe, tell them.
-      setToast({ message: "Invoice saved. To accept payments, connect Stripe in Settings.", type: 'error' });
+    } else if (
+      data &&
+      doc.type === DocumentType.Invoice &&
+      (!profile?.stripe_account_id || !profile.stripe_account_setup_complete)
+    ) {
+      setToast({
+        message: 'Invoice saved. To accept payments, connect Stripe in Settings.',
+        type: 'error',
+      });
     } else if (data) {
-      // For Quotes or non-payment documents
       setToast({ message: 'Document saved successfully.', type: 'success' });
     }
-    // *** END OF MODIFIED LOGIC ***
   };
 
   const updateDocument = async (updatedDoc: Document) => {
@@ -422,15 +432,14 @@ const App: React.FC = () => {
     else console.error('Error deleting document:', error);
   };
 
-  // *** NEW: Bulk delete for Files.tsx ***
   const bulkDeleteDocuments = async (docIds: string[]) => {
-      const { error } = await supabase.from('documents').delete().in('id', docIds);
-      if (!error) setDocuments((prev) => prev.filter(d => !docIds.includes(d.id)));
-      else {
-          console.error("Error bulk deleting documents:", error);
-          setToast({ message: `Error deleting documents: ${error.message}`, type: 'error' });
-      }
-  }
+    const { error } = await supabase.from('documents').delete().in('id', docIds);
+    if (!error) setDocuments((prev) => prev.filter((d) => !docIds.includes(d.id)));
+    else {
+      console.error('Error bulk deleting documents:', error);
+      setToast({ message: `Error deleting documents: ${error.message}`, type: 'error' });
+    }
+  };
 
   const addBusinessLetter = async (letter: NewBusinessLetterData) => {
     if (!session || !letter.customer) return;
@@ -471,8 +480,7 @@ const App: React.FC = () => {
         prev.map((l) => (l.id === data.id ? (data as BusinessLetter) : l))
       );
       setToast({ message: 'Letter updated successfully.', type: 'success' }); // Added toast
-    }
-    else if (error) console.error('Error updating letter:', error);
+    } else if (error) console.error('Error updating letter:', error);
   };
   const deleteBusinessLetter = async (letterId: string) => {
     const { error } = await supabase.from('business_letters').delete().eq('id', letterId);
@@ -480,15 +488,14 @@ const App: React.FC = () => {
     else console.error('Error deleting letter:', error);
   };
 
-  // *** NEW: Bulk delete for Files.tsx ***
   const bulkDeleteBusinessLetters = async (letterIds: string[]) => {
-      const { error } = await supabase.from('business_letters').delete().in('id', letterIds);
-      if (!error) setBusinessLetters((prev) => prev.filter(l => !letterIds.includes(l.id)));
-      else {
-          console.error("Error bulk deleting letters:", error);
-          setToast({ message: `Error deleting letters: ${error.message}`, type: 'error' });
-      }
-  }
+    const { error } = await supabase.from('business_letters').delete().in('id', letterIds);
+    if (!error) setBusinessLetters((prev) => prev.filter((l) => !letterIds.includes(l.id)));
+    else {
+      console.error('Error bulk deleting letters:', error);
+      setToast({ message: `Error deleting letters: ${error.message}`, type: 'error' });
+    }
+  };
 
   const addActivityLog = async (activity: Omit<ActivityLog, 'id' | 'created_at' | 'user_id'>) => {
     if (!session) return;
@@ -731,6 +738,10 @@ const App: React.FC = () => {
                     documents={documents}
                     editDocument={handleEditDocument}
                     pages={productivityPages}
+                    // Pass the new props here
+                    activityLogs={activityLogs}
+                    customers={customers}
+                    addActivityLog={addActivityLog}
                   />
                 }
               />
@@ -752,7 +763,7 @@ const App: React.FC = () => {
                 path="/crm/:customerId"
                 element={
                   <CustomerDetail
-                    customers={customersWithLogs}
+                    customers={customersWithLogs} // This is correct, it has the logs
                     documents={documents}
                     businessLetters={businessLetters}
                     editDocument={handleEditDocument}
@@ -761,7 +772,7 @@ const App: React.FC = () => {
                     emailTemplates={emailTemplates}
                     companyInfo={companyInfo}
                     commonTags={commonTags}
-                    setCommonTags={handleSetCommonTags}
+                    setCommonTags={setCommonTags}
                     addActivityLog={addActivityLog}
                   />
                 }
@@ -780,8 +791,8 @@ const App: React.FC = () => {
                     updateBusinessLetter={updateBusinessLetter}
                     deleteDocument={deleteDocument}
                     deleteBusinessLetter={deleteBusinessLetter}
-                    bulkDeleteDocuments={bulkDeleteDocuments} // Pass prop
-                    bulkDeleteBusinessLetters={bulkDeleteBusinessLetters} // Pass prop
+                    bulkDeleteDocuments={bulkDeleteDocuments}
+                    bulkDeleteBusinessLetters={bulkDeleteBusinessLetters}
                     searchTerm={globalSearchTerm}
                   />
                 }
