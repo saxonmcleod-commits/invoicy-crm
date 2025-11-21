@@ -1,4 +1,4 @@
-import { Document, CompanyInfo, BusinessLetter } from './types';
+import { Document, CompanyInfo, BusinessLetter, DocumentType } from './types';
 
 declare var jspdf: any;
 
@@ -85,7 +85,7 @@ const drawModernTemplate = (doc: any, document: Document, companyInfo: CompanyIn
   doc.setFont('helvetica', 'bold');
   doc.setTextColor('#64748b');
   doc.text('Issue Date:', pageW - margin - 120, currentY, { align: 'left' });
-  doc.text('Due Date:', pageW - margin - 120, currentY + 15, { align: 'left' });
+  doc.text(document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:', pageW - margin - 120, currentY + 15, { align: 'left' });
   doc.setFont('helvetica', 'normal');
   doc.setTextColor('#334155');
   doc.text(document.issue_date, pageW - margin, currentY, { align: 'right' });
@@ -203,8 +203,8 @@ const drawClassicTemplate = (doc: any, document: Document, companyInfo: CompanyI
   doc.setFontSize(10);
   doc.setTextColor('#1f2937');
   doc.text(`Number: ${document.doc_number}`, margin, currentY + 15);
-  doc.text(`Date: ${document.issue_date}`, margin, currentY + 28);
-  doc.text(`Due: ${document.due_date}`, margin, currentY + 41);
+  doc.text(`Issue Date: ${document.issue_date}`, margin, currentY + 28);
+  doc.text(`${document.type === DocumentType.Quote ? 'Valid To' : 'Due Date'}: ${document.due_date}`, margin, currentY + 41);
 
   doc.setFont('serif', 'bold');
   doc.text('Billed To:', pageW - margin, currentY, { align: 'right' });
@@ -348,7 +348,7 @@ const drawCreativeTemplate = (doc: any, document: Document, companyInfo: Company
 
   doc.setTextColor('#22d3ee');
   doc.text('Issue Date:', pageW - margin, currentY, { align: 'right' });
-  doc.text('Due Date:', pageW - margin, currentY + 15, { align: 'right' });
+  doc.text(document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:', pageW - margin, currentY + 15, { align: 'right' });
   doc.setTextColor('#ffffff');
   doc.text(document.issue_date, pageW - margin - 70, currentY, { align: 'right' });
   doc.text(document.due_date, pageW - margin - 70, currentY + 15, { align: 'right' });
@@ -451,7 +451,7 @@ const drawMinimalistTemplate = (doc: any, document: Document, companyInfo: Compa
   doc.setTextColor('#718096');
   doc.text('BILLED TO', margin, currentY);
   doc.text('ISSUE DATE', margin + 180, currentY);
-  doc.text('DUE DATE', margin + 300, currentY);
+  doc.text(document.type === DocumentType.Quote ? 'VALID TO' : 'DUE DATE', margin + 300, currentY);
 
   currentY += 15;
   doc.setFontSize(10);
@@ -588,7 +588,7 @@ const drawBoldTemplate = (doc: any, document: Document, companyInfo: CompanyInfo
   doc.setFont('helvetica', 'bold');
   doc.setTextColor('#6b7280');
   doc.text('Issue Date:', pageW - margin - 120, 180, { align: 'left' });
-  doc.text('Due Date:', pageW - margin - 120, 195, { align: 'left' });
+  doc.text(document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:', pageW - margin - 120, 195, { align: 'left' });
   doc.setFont('helvetica', 'normal');
   doc.setTextColor('#111827');
   doc.text(document.issue_date, pageW - margin, 180, { align: 'right' });
@@ -720,8 +720,8 @@ const drawRetroTemplate = (doc: any, document: Document, companyInfo: CompanyInf
   doc.setFont('courier', 'bold');
   doc.setTextColor(secondaryAccent);
   doc.text(`${document.type.toUpperCase()} #:`, pageW - margin - 80, currentY, { align: 'right' });
-  doc.text('DATE:', pageW - margin - 80, currentY + 15, { align: 'right' });
-  doc.text('DUE:', pageW - margin - 80, currentY + 30, { align: 'right' });
+  doc.text('ISSUE DATE:', pageW - margin - 80, currentY + 15, { align: 'right' });
+  doc.text(document.type === DocumentType.Quote ? 'VALID TO:' : 'DUE DATE:', pageW - margin - 80, currentY + 30, { align: 'right' });
 
   doc.setTextColor(baseColor);
   doc.setFont('courier', 'normal');

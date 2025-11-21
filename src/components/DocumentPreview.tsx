@@ -73,7 +73,7 @@ const TemplateModern: React.FC<ExtendedPreviewProps> = ({
               </p>
               {/* Fix: Changed dueDate to due_date */}
               <p>
-                <strong className="text-slate-500">Due Date:</strong> {document.due_date}
+                <strong className="text-slate-500">{document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:'}</strong> {document.due_date}
               </p>
             </div>
           </section>
@@ -190,11 +190,11 @@ const TemplateClassic: React.FC<ExtendedPreviewProps> = ({
               </p>
               {/* Fix: Changed issueDate to issue_date */}
               <p>
-                <span className="font-semibold text-gray-700">Date:</span> {document.issue_date}
+                <span className="font-semibold text-gray-700">Issue Date:</span> {document.issue_date}
               </p>
               {/* Fix: Changed dueDate to due_date */}
               <p>
-                <span className="font-semibold text-gray-700">Due:</span> {document.due_date}
+                <span className="font-semibold text-gray-700">{document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:'}</span> {document.due_date}
               </p>
             </div>
             <div className="sm:text-right">
@@ -336,7 +336,7 @@ const TemplateCreative: React.FC<ExtendedPreviewProps> = ({
               </p>
               {/* Fix: Changed dueDate to due_date */}
               <p className="text-cyan-400">
-                Due Date: <span className="text-white">{document.due_date}</span>
+                {document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:'} <span className="text-white">{document.due_date}</span>
               </p>
             </div>
           </section>
@@ -463,7 +463,7 @@ const TemplateMinimalist: React.FC<ExtendedPreviewProps> = ({
               <p className="font-medium text-gray-800">{document.issue_date}</p>
             </div>
             <div className="col-span-1">
-              <h3 className="text-xs uppercase text-gray-500 tracking-wider mb-2">Due Date</h3>
+              <h3 className="text-xs uppercase text-gray-500 tracking-wider mb-2">{document.type === DocumentType.Quote ? 'Valid To' : 'Due Date'}</h3>
               {/* Fix: Changed dueDate to due_date */}
               <p className="font-medium text-gray-800">{document.due_date}</p>
             </div>
@@ -603,7 +603,7 @@ const TemplateBold: React.FC<ExtendedPreviewProps> = ({
               </p>
               {/* Fix: Changed dueDate to due_date */}
               <p>
-                <strong className="text-gray-500">Due Date:</strong>{' '}
+                <strong className="text-gray-500">{document.type === DocumentType.Quote ? 'Valid To:' : 'Due Date:'}</strong>{' '}
                 <span className="text-gray-800">{document.due_date}</span>
               </p>
             </div>
@@ -721,11 +721,11 @@ const TemplateRetro: React.FC<ExtendedPreviewProps> = ({
               </p>
               {/* Fix: Changed issueDate to issue_date */}
               <p>
-                <span className="font-bold text-[#b58900]">DATE:</span> {document.issue_date}
+                <span className="font-bold text-[#b58900]">ISSUE DATE:</span> {document.issue_date}
               </p>
               {/* Fix: Changed dueDate to due_date */}
               <p>
-                <span className="font-bold text-[#b58900]">DUE:</span> {document.due_date}
+                <span className="font-bold text-[#b58900]">{document.type === DocumentType.Quote ? 'VALID TO:' : 'DUE DATE:'}</span> {document.due_date}
               </p>
             </div>
           </section>
