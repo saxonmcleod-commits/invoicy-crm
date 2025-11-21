@@ -56,7 +56,7 @@ const UnbilledExpensesModal: React.FC<{
             return newSet;
         });
     };
-    
+
     const handleAddSelected = () => {
         const selectedExpenses = expenses.filter(e => selectedExpenseIds.has(e.id));
         onAdd(selectedExpenses);
@@ -66,14 +66,14 @@ const UnbilledExpensesModal: React.FC<{
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                 <div className="p-6">
+                <div className="p-6">
                     <h2 className="text-xl font-bold mb-4">Add Unbilled Expenses</h2>
                     <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                         {expenses.map(expense => (
                             <label key={expense.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-100 dark:bg-zinc-900 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={selectedExpenseIds.has(expense.id)} 
+                                <input
+                                    type="checkbox"
+                                    checked={selectedExpenseIds.has(expense.id)}
                                     onChange={() => handleToggle(expense.id)}
                                     className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                 />
@@ -88,7 +88,7 @@ const UnbilledExpensesModal: React.FC<{
                         ))}
                     </div>
                 </div>
-                 <div className="px-6 py-4 bg-slate-50 dark:bg-zinc-900/50 flex justify-end gap-2 rounded-b-xl">
+                <div className="px-6 py-4 bg-slate-50 dark:bg-zinc-900/50 flex justify-end gap-2 rounded-b-xl">
                     <button onClick={onClose} className="px-4 py-2 rounded-md font-semibold hover:bg-slate-200 dark:hover:bg-zinc-700">Cancel</button>
                     <button onClick={handleAddSelected} className="px-4 py-2 rounded-md font-semibold bg-primary-600 text-white hover:bg-primary-700" disabled={selectedExpenseIds.size === 0}>Add Selected</button>
                 </div>
@@ -132,7 +132,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
             }
         }
     }, [documentToEdit, customers]);
-    
+
     // Auto-save the document state if it's a new document
     useAutoSave(AUTO_SAVE_KEY, !isEditMode ? doc : null, 3000);
 
@@ -182,7 +182,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
     const removeItem = (id: string) => {
         setDoc(prev => ({ ...prev, items: prev.items.filter(item => item.id !== id) }));
     };
-    
+
     const handleAddExpensesToDoc = (expensesToAdd: Expense[]) => {
         const newItems: DocumentItem[] = expensesToAdd.map(e => ({
             id: `item-exp-${e.id}`,
@@ -191,7 +191,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
             price: e.amount,
             sourceExpenseId: e.id,
         }));
-        setDoc(prev => ({...prev, items: [...prev.items, ...newItems]}));
+        setDoc(prev => ({ ...prev, items: [...prev.items, ...newItems] }));
     };
 
     const handleSave = () => {
@@ -207,7 +207,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
         }
         navigate('/files');
     };
-    
+
     const handleDownloadPdf = () => {
         generatePdf(currentDocument, companyInfo);
     };
@@ -234,7 +234,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
             navigate('/dashboard');
         }
     };
-    
+
     const handleRecoverDraft = () => {
         if (recoveredDraft) {
             setDoc(recoveredDraft);
@@ -274,7 +274,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
             <div className="flex-1 flex flex-col lg:flex-row gap-8 min-h-0 p-4 sm:p-6 lg:p-8">
                 {/* Mobile View Toggle */}
                 <div className="lg:hidden flex border-b border-slate-200 dark:border-zinc-800 -m-4 sm:-m-6 mb-4 bg-slate-100 dark:bg-zinc-950">
-                    <button 
+                    <button
                         onClick={() => setMobileView('editor')}
                         className={`flex-1 p-3 font-semibold text-center transition-colors ${mobileView === 'editor' ? 'bg-primary-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-zinc-700'}`}
                     >
@@ -283,7 +283,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                             <span>Editor</span>
                         </div>
                     </button>
-                    <button 
+                    <button
                         onClick={() => setMobileView('preview')}
                         className={`flex-1 p-3 font-semibold text-center transition-colors ${mobileView === 'preview' ? 'bg-primary-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-zinc-700'}`}
                     >
@@ -306,7 +306,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                                     {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                             </div>
-                             <div>
+                            <div>
                                 <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">Status</label>
                                 <select value={doc.status} onChange={(e) => setDoc(p => ({ ...p, status: e.target.value as DocumentStatus }))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700">
                                     <option value={DocumentStatus.Draft}>Draft</option>
@@ -324,17 +324,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                                 <button onClick={() => setDoc(p => ({ ...p, type: DocumentType.Quote }))} className={`flex-1 py-2 rounded-md transition ${doc.type === DocumentType.Quote ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-zinc-800'}`}>Quote</button>
                             </div>
                         </div>
-                        
+
                         {/* Recurrence Settings */}
                         {doc.type === DocumentType.Invoice && (
                             <div>
                                 <h2 className="text-lg font-semibold mb-2">Recurrence</h2>
                                 <div className="bg-slate-50 dark:bg-zinc-950/50 p-4 rounded-lg space-y-4">
                                     <div className="flex items-center">
-                                        <input 
-                                            type="checkbox" 
-                                            id="isRecurring" 
-                                            checked={!!doc.recurrence} 
+                                        <input
+                                            type="checkbox"
+                                            id="isRecurring"
+                                            checked={!!doc.recurrence}
                                             onChange={e => {
                                                 const { ...rest } = doc;
                                                 if (e.target.checked) {
@@ -353,9 +353,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">Frequency</label>
-                                                <select 
-                                                    value={doc.recurrence.frequency} 
-                                                    onChange={e => setDoc(p => ({...p, recurrence: {...p.recurrence!, frequency: e.target.value as Recurrence['frequency']}}))}
+                                                <select
+                                                    value={doc.recurrence.frequency}
+                                                    onChange={e => setDoc(p => ({ ...p, recurrence: { ...p.recurrence!, frequency: e.target.value as Recurrence['frequency'] } }))}
                                                     className="w-full p-2 border rounded-md bg-white dark:bg-zinc-800 border-slate-300 dark:border-zinc-700"
                                                 >
                                                     <option value="daily">Daily</option>
@@ -366,10 +366,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">End Date (Optional)</label>
-                                                <input 
-                                                    type="date" 
+                                                <input
+                                                    type="date"
                                                     value={doc.recurrence.endDate || ''}
-                                                    onChange={e => setDoc(p => ({...p, recurrence: {...p.recurrence!, endDate: e.target.value}}))}
+                                                    onChange={e => setDoc(p => ({ ...p, recurrence: { ...p.recurrence!, endDate: e.target.value } }))}
                                                     className="w-full p-2 border rounded-md bg-white dark:bg-zinc-800 border-slate-300 dark:border-zinc-700"
                                                 />
                                             </div>
@@ -397,7 +397,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                             <div className="space-y-2">
                                 {doc.items.map((item) => (
                                     <div key={item.id} className="flex gap-2 items-center">
-                                        <input type="text" placeholder="Description" value={item.description} onChange={e => handleItemChange(item.id, 'description', e.target.value)} className="flex-grow min-w-0 p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700" />
+                                        <textarea
+                                            placeholder="Description"
+                                            value={item.description}
+                                            onChange={e => {
+                                                handleItemChange(item.id, 'description', e.target.value);
+                                                e.target.style.height = 'auto';
+                                                e.target.style.height = e.target.scrollHeight + 'px';
+                                            }}
+                                            rows={1}
+                                            className="flex-grow min-w-0 p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 resize-none overflow-hidden"
+                                            style={{ minHeight: '42px' }}
+                                        />
                                         <input type="number" placeholder="Qty" value={item.quantity} onChange={e => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)} className="w-20 p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700" />
                                         <input type="number" placeholder="Price" value={item.price} onChange={e => handleItemChange(item.id, 'price', parseFloat(e.target.value) || 0)} className="w-24 p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700" />
                                         <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 p-2 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 flex-shrink-0">
@@ -420,7 +431,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                                 <div className="flex justify-between"><span>Subtotal:</span><span>{doc.subtotal.toFixed(2)}</span></div>
                                 <div className="flex justify-between items-center">
                                     <span>Tax (%):</span>
-                                    <input type="number" value={doc.tax} onChange={e => setDoc(p => ({ ...p, tax: parseFloat(e.target.value) || 0}))} className="w-20 p-1 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-right" />
+                                    <input type="number" value={doc.tax} onChange={e => setDoc(p => ({ ...p, tax: parseFloat(e.target.value) || 0 }))} className="w-20 p-1 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-right" />
                                 </div>
                                 <div className="flex justify-between font-bold text-lg border-t pt-2 border-slate-300 dark:border-zinc-700"><span>Total:</span><span>{doc.total.toFixed(2)}</span></div>
                             </div>
@@ -437,7 +448,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                             <h2 className="text-lg font-semibold mb-2">Template</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {TEMPLATES.map(template => (
-                                    <div key={template.id} onClick={() => setDoc(p => ({...p, template_id: template.id}))} className={`cursor-pointer border-2 rounded-lg overflow-hidden transition ${doc.template_id === template.id ? 'border-primary-500' : 'border-transparent hover:border-primary-300'}`}>
+                                    <div key={template.id} onClick={() => setDoc(p => ({ ...p, template_id: template.id }))} className={`cursor-pointer border-2 rounded-lg overflow-hidden transition ${doc.template_id === template.id ? 'border-primary-500' : 'border-transparent hover:border-primary-300'}`}>
                                         <div className="w-full h-auto aspect-[5/7] border-b border-slate-200 dark:border-zinc-800">
                                             <template.previewComponent />
                                         </div>
@@ -448,17 +459,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ customers, addDocument,
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Preview */}
                 <div className={`lg:w-1/2 h-full rounded-xl ${mobileView === 'preview' ? 'block' : 'hidden'} lg:block min-w-0`}>
                     <div className="h-full w-full bg-slate-200 dark:bg-zinc-950 rounded-xl p-2 sm:p-4 overflow-hidden">
                         <div className="w-full h-full overflow-y-auto overflow-x-hidden">
-                           <DocumentPreview document={currentDocument} companyInfo={companyInfo} />
+                            <DocumentPreview document={currentDocument} companyInfo={companyInfo} profile={null} />
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <UnbilledExpensesModal
                 isOpen={isExpenseModalOpen}
                 onClose={() => setIsExpenseModalOpen(false)}

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Document, CompanyInfo, DocumentItem, DocumentType, Profile } from '../types';
+import { Document, CompanyInfo, DocumentItem, DocumentType, Profile, DocumentStatus } from '../types';
 
 interface PreviewProps {
   document: Document;
@@ -24,7 +24,7 @@ const TemplateModern: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-slate-800 p-4 sm:p-6 lg:p-10 font-sans h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -93,7 +93,7 @@ const TemplateModern: React.FC<ExtendedPreviewProps> = ({
           <tbody className="divide-y divide-slate-200">
             {items.map((item) => (
               <tr key={item.id}>
-                <td className="p-3">{item.description}</td>
+                <td className="p-3 whitespace-pre-wrap">{item.description}</td>
                 <td className="p-3 text-center">{item.quantity}</td>
                 <td className="p-3 text-right">${item.price.toFixed(2)}</td>
                 <td className="p-3 text-right">${(item.quantity * item.price).toFixed(2)}</td>
@@ -105,7 +105,7 @@ const TemplateModern: React.FC<ExtendedPreviewProps> = ({
 
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -157,7 +157,7 @@ const TemplateClassic: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-gray-900 p-4 sm:p-6 lg:p-10 font-serif h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -220,7 +220,7 @@ const TemplateClassic: React.FC<ExtendedPreviewProps> = ({
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
-                <td className="border border-gray-300 p-2">{item.description}</td>
+                <td className="border border-gray-300 p-2 whitespace-pre-wrap">{item.description}</td>
                 <td className="border border-gray-300 p-2 text-right">{item.quantity}</td>
                 <td className="border border-gray-300 p-2 text-right">${item.price.toFixed(2)}</td>
                 <td className="border border-gray-300 p-2 text-right">
@@ -234,7 +234,7 @@ const TemplateClassic: React.FC<ExtendedPreviewProps> = ({
 
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -292,7 +292,7 @@ const TemplateCreative: React.FC<ExtendedPreviewProps> = ({
     <div className="bg-slate-900 text-white p-4 sm:p-6 lg:p-10 font-mono overflow-hidden h-full flex flex-col relative">
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-fuchsia-500/30 rounded-full filter blur-3xl"></div>
       <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-cyan-500/30 rounded-full filter blur-3xl"></div>
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-400/30 border-8 border-green-400/30 rounded-full px-8 py-4 transform -rotate-12"
@@ -351,7 +351,7 @@ const TemplateCreative: React.FC<ExtendedPreviewProps> = ({
               className="flex justify-between items-center py-3 border-b border-slate-700 last:border-b-0 flex-col sm:flex-row text-center sm:text-left"
             >
               <div className="flex-1 mb-2 sm:mb-0">
-                <p className="font-bold text-lg text-white">{item.description}</p>
+                <p className="font-bold text-lg text-white whitespace-pre-wrap">{item.description}</p>
                 <p className="text-fuchsia-400 text-sm">
                   {item.quantity} x ${item.price.toFixed(2)}
                 </p>
@@ -366,7 +366,7 @@ const TemplateCreative: React.FC<ExtendedPreviewProps> = ({
 
       {showFooter && (
         <footer className="mt-auto relative z-10">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -418,7 +418,7 @@ const TemplateMinimalist: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-gray-800 p-4 sm:p-6 lg:p-10 font-light font-sans h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -492,7 +492,7 @@ const TemplateMinimalist: React.FC<ExtendedPreviewProps> = ({
           <tbody>
             {items.map((item) => (
               <tr key={item.id} className="border-b border-gray-200">
-                <td className="p-2 py-3 text-gray-800">{item.description}</td>
+                <td className="p-2 py-3 text-gray-800 whitespace-pre-wrap">{item.description}</td>
                 <td className="p-2 py-3 text-center text-gray-800">{item.quantity}</td>
                 <td className="p-2 py-3 text-right text-gray-800">${item.price.toFixed(2)}</td>
                 <td className="p-2 py-3 text-right text-gray-800">
@@ -506,7 +506,7 @@ const TemplateMinimalist: React.FC<ExtendedPreviewProps> = ({
 
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -556,7 +556,7 @@ const TemplateBold: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-gray-900 font-sans h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -626,7 +626,7 @@ const TemplateBold: React.FC<ExtendedPreviewProps> = ({
           <tbody className="divide-y divide-gray-200">
             {items.map((item) => (
               <tr key={item.id}>
-                <td className="p-2 py-4 font-semibold text-gray-800">{item.description}</td>
+                <td className="p-2 py-4 font-semibold text-gray-800 whitespace-pre-wrap">{item.description}</td>
                 <td className="p-2 py-4 text-center text-gray-800">{item.quantity}</td>
                 <td className="p-2 py-4 text-right text-gray-800">${item.price.toFixed(2)}</td>
                 <td className="p-2 py-4 text-right font-semibold text-gray-800">
@@ -640,7 +640,7 @@ const TemplateBold: React.FC<ExtendedPreviewProps> = ({
 
       {showFooter && (
         <footer className="mt-auto px-4 sm:px-6 lg:px-10">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -690,7 +690,7 @@ const TemplateRetro: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-[#fdf6e3] text-[#586e75] p-4 sm:p-6 lg:p-10 font-mono h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -745,7 +745,7 @@ const TemplateRetro: React.FC<ExtendedPreviewProps> = ({
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
-                <td className="p-1 pt-2">{item.description}</td>
+                <td className="p-1 pt-2 whitespace-pre-wrap">{item.description}</td>
                 <td className="p-1 pt-2 text-center">{item.quantity}</td>
                 <td className="p-1 pt-2 text-right">${item.price.toFixed(2)}</td>
                 <td className="p-1 pt-2 text-right">${(item.quantity * item.price).toFixed(2)}</td>
@@ -757,7 +757,7 @@ const TemplateRetro: React.FC<ExtendedPreviewProps> = ({
 
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -807,7 +807,7 @@ const TemplateCorporate: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-gray-800 p-4 sm:p-6 lg:p-10 font-sans h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -883,7 +883,7 @@ const TemplateCorporate: React.FC<ExtendedPreviewProps> = ({
       </section>
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -934,7 +934,7 @@ const TemplateElegant: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-gray-800 p-4 sm:p-6 lg:p-10 font-serif h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-amber-600/20 border-8 border-amber-600/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -1006,7 +1006,7 @@ const TemplateElegant: React.FC<ExtendedPreviewProps> = ({
       </section>
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -1053,7 +1053,7 @@ const TemplateFriendly: React.FC<ExtendedPreviewProps> = ({
     <div className="bg-white text-gray-800 p-4 sm:p-6 lg:p-10 font-sans h-full flex flex-col overflow-hidden relative">
       <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-green-500/10 rounded-full"></div>
       <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-48 h-48 bg-green-500/10 rounded-full"></div>
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -1128,7 +1128,7 @@ const TemplateFriendly: React.FC<ExtendedPreviewProps> = ({
       </section>
       {showFooter && (
         <footer className="mt-auto relative z-10">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -1173,7 +1173,7 @@ const TemplateTechnical: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-gray-800 p-4 sm:p-6 lg:p-10 font-mono h-full flex flex-col text-sm relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -1233,7 +1233,7 @@ const TemplateTechnical: React.FC<ExtendedPreviewProps> = ({
       </section>
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -1282,7 +1282,7 @@ const TemplateEarthy: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-emerald-50 text-stone-800 p-4 smp-6 lg:p-10 font-sans h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-green-500/20 border-8 border-green-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -1355,7 +1355,7 @@ const TemplateEarthy: React.FC<ExtendedPreviewProps> = ({
       </section>
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}
@@ -1400,7 +1400,7 @@ const TemplateSwiss: React.FC<ExtendedPreviewProps> = ({
 }) => {
   return (
     <div className="bg-white text-black p-4 sm:p-6 lg:p-10 font-sans h-full flex flex-col relative">
-      {document.status === 'paid' && (
+      {document.status === DocumentStatus.Paid && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div
             className="text-8xl font-black text-red-500/20 border-8 border-red-500/20 rounded-full px-8 py-4 transform -rotate-12"
@@ -1471,7 +1471,7 @@ const TemplateSwiss: React.FC<ExtendedPreviewProps> = ({
       </section>
       {showFooter && (
         <footer className="mt-auto">
-          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== 'paid' && (
+          {document.type === DocumentType.Invoice && document.stripe_payment_link && document.status !== DocumentStatus.Paid && (
             <div className="my-6 text-center">
               <a
                 href={document.stripe_payment_link}

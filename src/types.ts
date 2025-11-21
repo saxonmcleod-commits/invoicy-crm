@@ -87,6 +87,7 @@ export interface Document {
   tax: number;
   total: number;
   recurrence?: Recurrence;
+  stripe_payment_link?: string;
   archived?: boolean;
   created_at: string;
 }

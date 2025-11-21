@@ -243,11 +243,9 @@ const drawClassicTemplate = (doc: any, document: Document, companyInfo: CompanyI
     let itemHeight = 25;
     doc.rect(margin, itemY, pageW - margin * 2, itemHeight, 'S');
     let x = margin;
-
     const descLines = doc.splitTextToSize(item.description, tableColWidths[0] - 10);
     itemHeight = Math.max(itemHeight, descLines.length * 10 + 10);
     doc.rect(margin, itemY, pageW - margin * 2, itemHeight, 'S');
-
     addWrappedText(doc, item.description, x + 5, itemY + 8, { maxWidth: tableColWidths[0] - 10 });
     x += tableColWidths[0];
     doc.text(String(item.quantity), x - 5, itemY + 16, { align: 'right' });
@@ -364,6 +362,7 @@ const drawCreativeTemplate = (doc: any, document: Document, companyInfo: Company
     doc.setFont('courier', 'bold');
     doc.setTextColor('#ffffff');
     doc.setFontSize(14);
+
     const descLines = doc.splitTextToSize(item.description, 350);
     doc.text(descLines, margin, currentY);
     const itemY = currentY;
@@ -377,12 +376,9 @@ const drawCreativeTemplate = (doc: any, document: Document, companyInfo: Company
     doc.setFont('courier', 'bold');
     doc.setFontSize(16);
     doc.setTextColor('#ffffff');
-    doc.text(
-      `$${(item.quantity * item.price).toFixed(2)}`,
-      pageW - margin,
-      itemY + itemHeight / 2,
-      { align: 'right' }
-    );
+    doc.text(`$${(item.quantity * item.price).toFixed(2)}`, pageW - margin, itemY + itemHeight / 2, {
+      align: 'right',
+    });
 
     currentY += itemHeight + 20;
     doc.setDrawColor('#4b5563');
@@ -621,22 +617,20 @@ const drawBoldTemplate = (doc: any, document: Document, companyInfo: CompanyInfo
   doc.setTextColor('#111827');
   document.items.forEach((item) => {
     const itemYStart = currentY;
+    doc.setFont('helvetica', 'bold');
     const descriptionLines = doc.splitTextToSize(item.description, 280);
     const textHeight = descriptionLines.length * 12;
-
-    doc.setFont('helvetica', 'bold');
     doc.text(descriptionLines, margin, itemYStart);
     doc.setFont('helvetica', 'normal');
-
     doc.text(String(item.quantity), pageW - margin - 150, itemYStart, { align: 'center' });
     doc.text(`$${item.price.toFixed(2)}`, pageW - margin - 80, itemYStart, { align: 'right' });
     doc.setFont('helvetica', 'bold');
     doc.text(`$${(item.quantity * item.price).toFixed(2)}`, pageW - margin, itemYStart, {
       align: 'right',
     });
-
-    currentY += Math.max(35, textHeight + 15);
-
+    doc.setFont('helvetica', 'normal');
+    const itemHeight = Math.max(35, textHeight + 15);
+    currentY += itemHeight;
     doc.setDrawColor('#e5e7eb');
     doc.line(margin, currentY - 8, pageW - margin, currentY - 8);
   });
