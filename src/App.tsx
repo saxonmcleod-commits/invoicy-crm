@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import {
   Customer,
   Document,
-  BusinessLetter,
   Expense,
 } from './types';
 import { THEMES } from './constants';
@@ -17,19 +16,24 @@ import BillsAndExpenses, { ExpenseModal } from './components/BillsAndExpenses';
 import Calendar from './components/Calendar';
 import Settings from './components/Settings';
 import NewDocument from './components/NewDocument';
-import BusinessLetterEditor from './components/BusinessLetterEditor';
 import CustomerDetail from './components/CustomerDetail';
 import Files from './components/Files';
 import AuthPage from './components/Auth';
 import { useAuth } from './AuthContext';
 import ProductivityHub from './components/ProductivityHub';
+import QuickActions from './components/QuickActions';
+
+// Modals
+import CustomerModal from './components/CustomerModal';
+import AddNoteModal from './components/AddNoteModal';
+import EmailModal from './components/EmailModal';
+import SetGoalModal from './components/SetGoalModal';
 
 // Hooks
 import { useCustomers } from './hooks/useCustomers';
 import { useDocuments } from './hooks/useDocuments';
 import { useExpenses } from './hooks/useExpenses';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
-import { useBusinessLetters } from './hooks/useBusinessLetters';
 import { useTasks } from './hooks/useTasks';
 import { useEmailTemplates } from './hooks/useEmailTemplates';
 import { useActivityLogs } from './hooks/useActivityLogs';
@@ -45,7 +49,6 @@ const App: React.FC = () => {
   const { documents, addDocument, updateDocument, deleteDocument, bulkDeleteDocuments, setDocuments } = useDocuments(profile);
   const { expenses, addExpense, updateExpense, deleteExpense, setExpenses } = useExpenses();
   const { events, addEvent, updateEvent, deleteEvent, setEvents } = useCalendarEvents();
-  const { businessLetters, addBusinessLetter, updateBusinessLetter, deleteBusinessLetter, bulkDeleteBusinessLetters, setBusinessLetters } = useBusinessLetters();
   const { tasks, addTask, updateTask, deleteTask, setTasks } = useTasks();
   const { emailTemplates, addEmailTemplate, updateEmailTemplate, deleteEmailTemplate, setEmailTemplates } = useEmailTemplates();
   const { activityLogs, addActivityLog, setActivityLogs } = useActivityLogs();
@@ -59,13 +62,18 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [documentToEdit, setDocumentToEdit] = useState<Document | null>(null);
-  const [letterToEdit, setLetterToEdit] = useState<BusinessLetter | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Global Expense Modal State
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [initialExpenseData, setInitialExpenseData] = useState<Partial<Expense> | undefined>(undefined);
+
+  // Quick Action Modals State
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -107,7 +115,6 @@ const App: React.FC = () => {
     if (!session) {
       setCustomers([]);
       setDocuments([]);
-      setBusinessLetters([]);
       setEvents([]);
       setExpenses([]);
       setEmailTemplates([]);
@@ -116,7 +123,7 @@ const App: React.FC = () => {
       setTasks([]);
       setCommonTags([]);
     }
-  }, [session, setCustomers, setDocuments, setBusinessLetters, setEvents, setExpenses, setEmailTemplates, setActivityLogs, setProductivityPages, setTasks]);
+  }, [session, setCustomers, setDocuments, setEvents, setExpenses, setEmailTemplates, setActivityLogs, setProductivityPages, setTasks]);
 
   const customersWithLogs = useMemo(() => {
     return customers.map((customer) => ({
@@ -146,15 +153,10 @@ const App: React.FC = () => {
     navigate('/editor');
   };
 
-  const handleEditLetter = (letter: BusinessLetter) => {
-    setLetterToEdit(letter);
-    setIsSidebarVisible(true);
-    navigate('/letter-editor');
-  };
+
 
   const clearActiveDocuments = () => {
     setDocumentToEdit(null);
-    setLetterToEdit(null);
     setIsSidebarVisible(true);
   };
 
@@ -191,21 +193,39 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddBusinessLetter = async (letter: any) => {
+
+
+  // Quick Action Handlers
+  const handleQuickAddCustomer = async (customerData: any) => {
     try {
-      await addBusinessLetter(letter);
-      setToast({ message: 'Letter saved successfully.', type: 'success' });
+      await addCustomer(customerData);
+      setToast({ message: 'Customer added successfully!', type: 'success' });
     } catch (e: any) {
-      setToast({ message: `Error saving letter: ${e.message}`, type: 'error' });
+      setToast({ message: `Error adding customer: ${e.message}`, type: 'error' });
     }
   };
 
-  const handleUpdateBusinessLetter = async (letter: BusinessLetter) => {
+  const handleQuickAddNote = async (title: string, icon: string) => {
     try {
-      await updateBusinessLetter(letter);
-      setToast({ message: 'Letter updated successfully.', type: 'success' });
+      await addPage({ title, icon });
+      setToast({ message: 'Note created successfully!', type: 'success' });
     } catch (e: any) {
-      setToast({ message: `Error updating letter: ${e.message}`, type: 'error' });
+      setToast({ message: `Error creating note: ${e.message}`, type: 'error' });
+    }
+  };
+
+  const handleQuickSendEmail = (to: string, subject: string, body: string) => {
+    // Mock send
+    console.log('Sending email:', { to, subject, body });
+    setToast({ message: 'Email sent successfully!', type: 'success' });
+  };
+
+  const handleQuickSetGoal = async (description: string, dueDate: string) => {
+    try {
+      await addTask({ text: description, due_date: dueDate });
+      setToast({ message: 'Goal set successfully!', type: 'success' });
+    } catch (e: any) {
+      setToast({ message: `Error setting goal: ${e.message}`, type: 'error' });
     }
   };
 
@@ -219,7 +239,7 @@ const App: React.FC = () => {
   }
 
   const isEditorPage =
-    location.pathname.includes('/editor') || location.pathname.includes('/letter-editor');
+    location.pathname.includes('/editor');
 
   return (
     <div className="h-screen bg-slate-100 dark:bg-zinc-950 relative">
@@ -263,6 +283,7 @@ const App: React.FC = () => {
                 element={
                   <CrmView
                     customers={customersWithLogs}
+                    documents={documents}
                     addCustomer={addCustomer}
                     updateCustomer={updateCustomer}
                     deleteCustomer={deleteCustomer}
@@ -278,9 +299,7 @@ const App: React.FC = () => {
                   <CustomerDetail
                     customers={customersWithLogs}
                     documents={documents}
-                    businessLetters={businessLetters}
                     editDocument={handleEditDocument}
-                    editLetter={handleEditLetter}
                     updateCustomer={updateCustomer}
                     emailTemplates={emailTemplates}
                     companyInfo={companyInfo}
@@ -290,22 +309,17 @@ const App: React.FC = () => {
                   />
                 }
               />
-              <Route path="/new" element={<NewDocument />} />
+              <Route path="/new" element={<Navigate to="/editor" />} />
               <Route
                 path="/files"
                 element={
                   <Files
                     documents={documents}
-                    businessLetters={businessLetters}
                     companyInfo={companyInfo}
                     editDocument={handleEditDocument}
-                    editLetter={handleEditLetter}
                     updateDocument={handleUpdateDocument}
-                    updateBusinessLetter={handleUpdateBusinessLetter}
                     deleteDocument={deleteDocument}
-                    deleteBusinessLetter={deleteBusinessLetter}
                     bulkDeleteDocuments={bulkDeleteDocuments}
-                    bulkDeleteBusinessLetters={bulkDeleteBusinessLetters}
                     searchTerm={globalSearchTerm}
                   />
                 }
@@ -324,19 +338,7 @@ const App: React.FC = () => {
                   />
                 }
               />
-              <Route
-                path="/letter-editor"
-                element={
-                  <BusinessLetterEditor
-                    letterToEdit={letterToEdit}
-                    addBusinessLetter={handleAddBusinessLetter}
-                    updateBusinessLetter={handleUpdateBusinessLetter}
-                    deleteBusinessLetter={deleteBusinessLetter}
-                    companyInfo={companyInfo}
-                    customers={customers}
-                  />
-                }
-              />
+
               <Route
                 path="/expenses"
                 element={<Navigate to="/bills-and-expenses" replace />}
@@ -436,6 +438,42 @@ const App: React.FC = () => {
             expense={editingExpense}
             customers={customers}
             initialData={initialExpenseData}
+          />
+
+          {/* Quick Action Modals */}
+          <CustomerModal
+            isOpen={isCustomerModalOpen}
+            onClose={() => setIsCustomerModalOpen(false)}
+            onSave={handleQuickAddCustomer}
+            onUpdate={() => { }} // Not needed for quick add
+            customerToEdit={null}
+          />
+
+          <AddNoteModal
+            isOpen={isNoteModalOpen}
+            onClose={() => setIsNoteModalOpen(false)}
+            onSave={handleQuickAddNote}
+          />
+
+          <EmailModal
+            isOpen={isEmailModalOpen}
+            onClose={() => setIsEmailModalOpen(false)}
+            onSend={handleQuickSendEmail}
+            customers={customers}
+          />
+
+          <SetGoalModal
+            isOpen={isGoalModalOpen}
+            onClose={() => setIsGoalModalOpen(false)}
+            onSave={handleQuickSetGoal}
+          />
+
+          {/* Quick Actions Floating Button */}
+          <QuickActions
+            onAddCustomer={() => setIsCustomerModalOpen(true)}
+            onAddNote={() => setIsNoteModalOpen(true)}
+            onSendEmail={() => setIsEmailModalOpen(true)}
+            onSetGoal={() => setIsGoalModalOpen(true)}
           />
         </div>
       </div>

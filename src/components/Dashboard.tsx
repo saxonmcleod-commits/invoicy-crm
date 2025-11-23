@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useMemo } from 'react';
 import {
   Document,
   DocumentStatus,
@@ -195,72 +194,7 @@ const FinancialPulse: React.FC<{
   );
 };
 
-// --- Quick Actions Component ---
-const QuickActions: React.FC = () => {
-  const navigate = useNavigate();
-  const actions = [
-    {
-      label: 'New Invoice',
-      path: '/new',
-      color: 'bg-blue-50 text-blue-600 hover:bg-blue-100',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Add Customer',
-      path: '/crm',
-      color: 'bg-purple-50 text-purple-600 hover:bg-purple-100',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'New Expense',
-      path: '/expenses',
-      color: 'bg-red-50 text-red-600 hover:bg-red-100',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'New Project',
-      path: '/projects',
-      color: 'bg-amber-50 text-amber-600 hover:bg-amber-100',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-      ),
-    },
-  ];
 
-  return (
-    <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm h-full">
-      <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
-        Quick Actions
-      </h2>
-      <div className="grid grid-cols-2 gap-4">
-        {actions.map((action) => (
-          <button
-            key={action.label}
-            onClick={() => navigate(action.path)}
-            className={`flex flex-col items-center justify-center p-4 rounded-xl transition-colors ${action.color} dark:bg-opacity-10`}
-          >
-            <div className="mb-2">{action.icon}</div>
-            <span className="font-semibold text-sm">{action.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // --- Main Dashboard Component ---
 interface DashboardProps {
@@ -303,22 +237,17 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Bottom Row: Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <QuickActions />
-        </div>
-        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
-          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
-            Recent Activity
-          </h2>
-          <ActivityLogComponent
-            activityLogs={recentActivity}
-            customers={customers}
-            addActivityLog={addActivityLog}
-            showCustomerName={true}
-          />
-        </div>
+      {/* Bottom Row: Recent Activity */}
+      <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
+        <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
+          Recent Activity
+        </h2>
+        <ActivityLogComponent
+          activityLogs={recentActivity}
+          customers={customers}
+          addActivityLog={addActivityLog}
+          showCustomerName={true}
+        />
       </div>
     </div>
   );

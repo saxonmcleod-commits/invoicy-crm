@@ -36,13 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       iconPath:
         'M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 1.5m1-1.5l1 1.5m0 0l.5 1.5m-1.5-1.5l-1.5-1.5m0 0l1.5 1.5m-1.5-1.5l-1.5-1.5m-6.75 12.75h16.5',
     },
-    {
-      to: '/new',
-      label: 'New Document',
-      iconPath:
-        'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
-      action: clearActiveDocuments,
-    },
+
     {
       to: '/files',
       label: 'Files',
@@ -111,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <NavLink
               key={item.to}
               to={item.to}
-              onClick={() => handleLinkClick(item.action)}
+              onClick={() => handleLinkClick()}
               className={({ isActive }) =>
                 `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`
               }

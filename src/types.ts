@@ -36,6 +36,8 @@ export interface Customer {
   id: string; // UUID from Supabase
   user_id: string;
   name: string;
+  company_name?: string;
+  industry?: string;
   email: string;
   phone: string;
   address: string;
@@ -92,27 +94,9 @@ export interface Document {
   created_at: string;
 }
 
-export interface BusinessLetter {
-  id: string;
-  user_id: string;
-  doc_number: string;
-  customer_id: string;
-  customer: Customer | null; // Populated by join
-  issue_date: string;
-  subject: string;
-  body: string;
-  type: 'BusinessLetter';
-  archived?: boolean;
-  created_at: string;
-}
-
-// Overwrite the customer property to be nullable for new docs/letters before they're saved
+// Overwrite the customer property to be nullable for new docs before they're saved
 export type NewDocumentData = Omit<
   Document,
-  'id' | 'doc_number' | 'customer_id' | 'created_at' | 'user_id' | 'customer'
-> & { customer: Customer | null };
-export type NewBusinessLetterData = Omit<
-  BusinessLetter,
   'id' | 'doc_number' | 'customer_id' | 'created_at' | 'user_id' | 'customer'
 > & { customer: Customer | null };
 

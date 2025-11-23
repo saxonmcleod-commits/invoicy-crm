@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { CompanyInfo, EmailTemplate } from '../types';
 import { supabase } from '../supabaseClient';
 import { THEMES } from '../constants';
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 
 // --- TemplateModal (unchanged from your file) ---
 interface TemplateModalProps {
@@ -288,6 +289,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
+  const { connectGoogle, loading: googleLoading } = useGoogleCalendar();
 
   // Check Stripe account status on component load
   useEffect(() => {
@@ -297,17 +299,17 @@ const Settings: React.FC<SettingsProps> = ({
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
-          
+
           // ***
           // *** FIX: Call the Vercel function using fetch
           // ***
           const response = await fetch('/api/check-stripe-account-status', {
-             method: 'POST', // Match the POST method in the API file
-             headers: {
-                'Authorization': `Bearer ${session.access_token}`
-             }
+            method: 'POST', // Match the POST method in the API file
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
           });
-          
+
           const data = await response.json();
           if (!response.ok) {
             throw new Error(data.error || 'Failed to check Stripe status');
@@ -320,7 +322,7 @@ const Settings: React.FC<SettingsProps> = ({
               .update({ stripe_account_setup_complete: true })
               .eq('id', session.user.id);
           }
-          
+
         } catch (error: any) {
           console.error("Error checking Stripe status:", error.message);
         } finally {
@@ -401,15 +403,15 @@ const Settings: React.FC<SettingsProps> = ({
       const response = await fetch('/api/create-stripe-account-link', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`
         }
       });
-      
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create Stripe link');
       }
-      
+
       if (data.url) {
         window.location.href = data.url; // Redirect to Stripe onboarding
       }
@@ -420,7 +422,7 @@ const Settings: React.FC<SettingsProps> = ({
       setStripeLoading(false);
     }
   };
-  
+
   const isStripeConnected = profile?.stripe_account_id && profile?.stripe_account_setup_complete;
 
   return (
@@ -605,6 +607,30 @@ const Settings: React.FC<SettingsProps> = ({
               )}
             </div>
           </div>
+          {/* Integrations Card */}
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">Integrations</h2>
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-slate-800 dark:text-zinc-100">Google Calendar & Meet</p>
+                  <p className="text-sm text-slate-500 dark:text-zinc-400">Connect to create Google Meet links directly.</p>
+                </div>
+                <button
+                  onClick={connectGoogle}
+                  disabled={googleLoading}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-zinc-700 border border-slate-200 dark:border-zinc-600 hover:bg-slate-50 dark:hover:bg-zinc-600 transition-colors flex items-center gap-2"
+                >
+                  {googleLoading ? 'Connecting...' : (
+                    <>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" /></svg>
+                      Connect Google
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <TemplateModal
@@ -614,7 +640,7 @@ const Settings: React.FC<SettingsProps> = ({
         onDelete={deleteEmailTemplate}
         template={editingTemplate}
       />
-    </div>
+    </div >
   );
 };
 

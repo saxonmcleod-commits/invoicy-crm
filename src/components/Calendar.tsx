@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { CalendarEvent, Task, Document } from '../types';
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 
 type View = 'month' | 'week' | 'day' | 'agenda';
 
@@ -26,13 +27,14 @@ const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocum
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
     const [modalData, setModalData] = useState<{ title: string; start: string; end: string; color: string; meetingLink?: string; }>({ title: '', start: '', end: '', color: '#3b82f6', meetingLink: '' });
     const [copySuccess, setCopySuccess] = useState('');
+    const { createMeeting, loading: meetingLoading, error: meetingError } = useGoogleCalendar();
 
     const handlePrev = () => {
         if (view === 'month') setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
         if (view === 'week') setCurrentDate(d => new Date(d.setDate(d.getDate() - 7)));
         if (view === 'day') setCurrentDate(d => new Date(d.setDate(d.getDate() - 1)));
     };
-    
+
     const handleNext = () => {
         if (view === 'month') setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
         if (view === 'week') setCurrentDate(d => new Date(d.setDate(d.getDate() + 7)));
@@ -67,7 +69,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocum
         }
 
         const eventData = { title, start_time: new Date(start).toISOString(), end_time: new Date(end).toISOString(), color, meeting_link: meetingLink?.trim() ? meetingLink.trim() : undefined };
-        
+
         if (selectedEvent) {
             updateEvent({ ...selectedEvent, ...eventData });
         } else {
@@ -82,7 +84,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocum
         }
         setIsModalOpen(false);
     }
-    
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text).then(() => {
             setCopySuccess('Copied!');
@@ -91,12 +93,12 @@ const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocum
             setCopySuccess('Failed');
         });
     };
-    
+
     return (
         <div className="flex flex-col h-full bg-slate-100 dark:bg-zinc-950 text-slate-800 dark:text-slate-200">
             <header className="p-4 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex-shrink-0 z-10 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                     <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
                         <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-50 w-48">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
                         <div className="flex items-center gap-1">
                             <button onClick={handlePrev} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800" title="Previous"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg></button>
@@ -119,41 +121,67 @@ const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocum
                     {view === 'week' && <p className="p-8 text-center text-slate-500">Week View Coming Soon</p>}
                 </main>
             </div>
-            
+
             {isModalOpen && (
-                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-md">
                         <div className="p-6">
                             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-zinc-50">{selectedEvent ? 'Edit Event' : 'New Event'}</h2>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">Title</label>
-                                    <input type="text" value={modalData.title} onChange={e => setModalData(d => ({...d, title: e.target.value}))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
+                                    <input type="text" value={modalData.title} onChange={e => setModalData(d => ({ ...d, title: e.target.value }))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">Start</label>
-                                        <input type="datetime-local" value={modalData.start} onChange={e => setModalData(d => ({...d, start: e.target.value}))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
+                                        <input type="datetime-local" value={modalData.start} onChange={e => setModalData(d => ({ ...d, start: e.target.value }))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">End</label>
-                                        <input type="datetime-local" value={modalData.end} onChange={e => setModalData(d => ({...d, end: e.target.value}))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
+                                        <input type="datetime-local" value={modalData.end} onChange={e => setModalData(d => ({ ...d, end: e.target.value }))} className="w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">Color</label>
-                                    <input type="color" value={modalData.color} onChange={e => setModalData(d => ({...d, color: e.target.value}))} className="w-full p-1 h-10 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700" />
+                                    <input type="color" value={modalData.color} onChange={e => setModalData(d => ({ ...d, color: e.target.value }))} className="w-full p-1 h-10 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-600 dark:text-zinc-300 mb-1">Video Meeting Link</label>
                                     <div className="flex items-center gap-2">
-                                        <input type="url" placeholder="Paste meeting link here..." value={modalData.meetingLink || ''} onChange={e => setModalData(d => ({...d, meetingLink: e.target.value}))} className="flex-1 w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
+                                        <input type="url" placeholder="Paste meeting link here..." value={modalData.meetingLink || ''} onChange={e => setModalData(d => ({ ...d, meetingLink: e.target.value }))} className="flex-1 w-full p-2 border rounded-md bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 focus:ring-primary-500 focus:border-primary-500" />
                                         {modalData.meetingLink && <button onClick={() => copyToClipboard(modalData.meetingLink!)} className="p-2 text-xs font-semibold rounded bg-slate-200 dark:bg-zinc-700 flex-shrink-0">{copySuccess || 'Copy'}</button>}
                                     </div>
                                     <div className="mt-2 flex gap-2">
-                                        <button type="button" onClick={() => window.open('https://meet.new', '_blank')} className="flex-1 p-2 text-sm font-semibold rounded-md bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600">Create Google Meet</button>
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                if (!modalData.title || !modalData.start || !modalData.end) {
+                                                    alert('Please set a title, start, and end time first.');
+                                                    return;
+                                                }
+                                                try {
+                                                    const link = await createMeeting(modalData.title, new Date(modalData.start).toISOString(), new Date(modalData.end).toISOString());
+                                                    if (link) {
+                                                        setModalData(d => ({ ...d, meetingLink: link }));
+                                                    }
+                                                } catch (e: any) {
+                                                    alert('Failed to create meeting. Make sure you have connected your Google account in Settings.');
+                                                }
+                                            }}
+                                            disabled={meetingLoading}
+                                            className="flex-1 p-2 text-sm font-semibold rounded-md bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center gap-2"
+                                        >
+                                            {meetingLoading ? 'Creating...' : (
+                                                <>
+                                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" /></svg>
+                                                    Create Google Meet
+                                                </>
+                                            )}
+                                        </button>
                                         <button type="button" onClick={() => window.open('https://zoom.us/start/meeting', '_blank')} className="flex-1 p-2 text-sm font-semibold rounded-md bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600">Create Zoom Meeting</button>
                                     </div>
+                                    {meetingError && <p className="text-xs text-red-500 mt-1">{meetingError}</p>}
                                     <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Create a meeting in a new tab and paste the link above.</p>
                                 </div>
                             </div>
@@ -172,13 +200,13 @@ const Calendar: React.FC<CalendarProps> = ({ events, tasks, documents, editDocum
     );
 };
 
-const MonthView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], documents: Document[], onDayClick: (date: Date) => void, onEventClick: (event: CalendarEvent) => void, onTaskClick: (task: Task) => void, onDocumentClick: (doc: Document) => void}> = ({ date, events, tasks, documents, onDayClick, onEventClick, onTaskClick, onDocumentClick }) => {
+const MonthView: React.FC<{ date: Date, events: CalendarEvent[], tasks: Task[], documents: Document[], onDayClick: (date: Date) => void, onEventClick: (event: CalendarEvent) => void, onTaskClick: (task: Task) => void, onDocumentClick: (doc: Document) => void }> = ({ date, events, tasks, documents, onDayClick, onEventClick, onTaskClick, onDocumentClick }) => {
     const days = useMemo(() => {
         const year = date.getFullYear();
         const month = date.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         const daysArray = [];
         for (let i = 0; i < firstDay; i++) daysArray.push({ date: null });
         for (let i = 1; i <= daysInMonth; i++) daysArray.push({ date: new Date(year, month, i) });
@@ -206,14 +234,14 @@ const MonthView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], d
                                     <span className="font-semibold">{event.title}</span>
                                 </button>
                             ))}
-                             {dayDocs.map(doc => (
+                            {dayDocs.map(doc => (
                                 <button key={`doc-${doc.id}`} onClick={(e) => { e.stopPropagation(); onDocumentClick(doc); }} className="w-full text-left text-xs p-1 rounded truncate flex items-center gap-1.5 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     <span className="font-semibold">DUE: {doc.doc_number}</span>
                                 </button>
                             ))}
                             {dayTasks.map(task => (
-                                <button key={`task-${task.id}`} onClick={(e) => { e.stopPropagation(); onTaskClick({...task, completed: !task.completed})}} className={`w-full text-left text-xs p-1 rounded truncate flex items-center gap-1.5 ${task.completed ? 'bg-slate-100 text-slate-500 line-through dark:bg-zinc-800' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'}`}>
+                                <button key={`task-${task.id}`} onClick={(e) => { e.stopPropagation(); onTaskClick({ ...task, completed: !task.completed }) }} className={`w-full text-left text-xs p-1 rounded truncate flex items-center gap-1.5 ${task.completed ? 'bg-slate-100 text-slate-500 line-through dark:bg-zinc-800' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     <span>{task.text}</span>
                                 </button>
@@ -226,14 +254,14 @@ const MonthView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], d
     );
 };
 
-const AgendaView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], onEventClick: (event: CalendarEvent) => void, onTaskClick: (task: Task) => void}> = ({date, events, tasks, onEventClick, onTaskClick}) => {
+const AgendaView: React.FC<{ date: Date, events: CalendarEvent[], tasks: Task[], onEventClick: (event: CalendarEvent) => void, onTaskClick: (task: Task) => void }> = ({ date, events, tasks, onEventClick, onTaskClick }) => {
     const groupedItems = useMemo(() => {
         const items: { date: Date, event?: CalendarEvent, task?: Task }[] = [
             ...events.map(e => ({ date: new Date(e.start_time), event: e })),
             ...tasks.filter(t => t.due_date).map(t => ({ date: new Date(new Date(t.due_date!).setHours(9)), task: t }))
         ];
 
-        const sorted = items.sort((a,b) => a.date.getTime() - b.date.getTime());
+        const sorted = items.sort((a, b) => a.date.getTime() - b.date.getTime());
 
         const grouped = sorted.reduce((acc, item) => {
             const dateStr = item.date.toISOString().split('T')[0];
@@ -244,9 +272,9 @@ const AgendaView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], 
 
         return Object.entries(grouped);
     }, [date, events, tasks]);
-    
+
     return (
-         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             {groupedItems.length > 0 ? groupedItems.map(([dateStr, items]) => (
                 <div key={dateStr}>
                     <h3 className="font-bold text-lg mb-3 pb-2 border-b border-slate-200 dark:border-zinc-800">
@@ -255,14 +283,14 @@ const AgendaView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], 
                     <div className="space-y-3">
                         {items.map((item, index) => item.event ? (
                             <button key={`evt-${item.event.id}-${index}`} onClick={() => onEventClick(item.event!)} className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors">
-                                <div className="w-1.5 h-10 rounded-full flex-shrink-0" style={{backgroundColor: item.event.color}}></div>
+                                <div className="w-1.5 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: item.event.color }}></div>
                                 <div className="text-left">
                                     <p className="font-semibold flex items-center gap-2 text-slate-800 dark:text-zinc-100">{item.event.title}</p>
-                                    <p className="text-sm text-slate-500 dark:text-zinc-400">{new Date(item.event.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(item.event.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                    <p className="text-sm text-slate-500 dark:text-zinc-400">{new Date(item.event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(item.event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                 </div>
                             </button>
                         ) : (
-                             <button key={`tsk-${item.task!.id}-${index}`} onClick={() => onTaskClick({...item.task!, completed: !item.task!.completed})} className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors">
+                            <button key={`tsk-${item.task!.id}-${index}`} onClick={() => onTaskClick({ ...item.task!, completed: !item.task!.completed })} className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors">
                                 <div className="w-1.5 h-10 rounded-full flex-shrink-0 bg-amber-400"></div>
                                 <div className="text-left">
                                     <p className={`font-semibold text-slate-800 dark:text-zinc-100 ${item.task!.completed ? 'line-through' : ''}`}>{item.task!.text}</p>
@@ -282,8 +310,8 @@ const AgendaView: React.FC<{date: Date, events: CalendarEvent[], tasks: Task[], 
 const isSameDay = (d1: Date, d2: Date) => {
     // A simple date comparison that ignores time and timezone differences.
     return d1.getFullYear() === d2.getFullYear() &&
-           d1.getMonth() === d2.getMonth() &&
-           d1.getDate() === d2.getDate();
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
 }
 
 const formatDateTimeLocal = (date: Date) => {

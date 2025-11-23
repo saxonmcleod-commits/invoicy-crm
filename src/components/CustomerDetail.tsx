@@ -3,7 +3,6 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import {
   Customer,
   Document,
-  BusinessLetter,
   ActivityLog,
   EmailTemplate,
   CompanyInfo,
@@ -186,9 +185,7 @@ const EmailModal: React.FC<{
 interface CustomerDetailProps {
   customers: Customer[];
   documents: Document[];
-  businessLetters: BusinessLetter[];
   editDocument: (doc: Document) => void;
-  editLetter: (letter: BusinessLetter) => void;
   updateCustomer: (customer: Customer) => void;
   addActivityLog: (activity: Omit<ActivityLog, 'id' | 'created_at' | 'user_id'>) => void;
   emailTemplates: EmailTemplate[];
@@ -217,9 +214,7 @@ const StatCard: React.FC<{ title: string; value: string }> = ({ title, value }) 
 const CustomerDetail: React.FC<CustomerDetailProps> = ({
   customers, // This is actually customersWithLogs from App.tsx
   documents,
-  businessLetters,
   editDocument,
-  editLetter,
   updateCustomer,
   addActivityLog,
   emailTemplates,
@@ -303,11 +298,9 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
   const customerDocuments = documents.filter(
     (d) => d.customer?.id === customerId && !d.archived
   );
-  const customerLetters = businessLetters.filter(
-    (l) => l.customer?.id === customerId && !l.archived
-  );
 
-  const HistoryItem: React.FC<{ item: Document | BusinessLetter; onEdit: () => void }> = ({
+
+  const HistoryItem: React.FC<{ item: Document; onEdit: () => void }> = ({
     item,
     onEdit,
   }) => (
@@ -320,9 +313,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
           {item.doc_number}
         </p>
         <p className="text-sm text-slate-500 dark:text-zinc-400">
-          {'type' in item && item.type === 'BusinessLetter'
-            ? `Subject: ${item.subject}`
-            : `Issued: ${item.issue_date}`}
+          {`Issued: ${item.issue_date}`}
         </p>
       </div>
       {'total' in item && (
@@ -563,40 +554,29 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
             )}
           </div>
 
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-zinc-100">
-              Letter History
-            </h2>
-            {customerLetters.length > 0 ? (
-              <ul className="space-y-3 max-h-40 overflow-y-auto pr-2">
-                {customerLetters.map((letter) => (
-                  <li key={letter.id}>
-                    <HistoryItem item={letter} onEdit={() => editLetter(letter)} />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-slate-500 dark:text-zinc-400">No letters found.</p>
-            )}
-          </div>
         </div>
       </div>
-      {isPrefsModalOpen && (
-        <PreferencesModal
-          customer={customer}
-          onClose={() => setIsPrefsModalOpen(false)}
-          onSave={handleSavePrefs}
-        />
-      )}
-      {isTagsModalOpen && (
-        <TagsModal
-          customer={customer}
-          onClose={() => setIsTagsModalOpen(false)}
-          onSave={handleSaveTags}
-          commonTags={commonTags}
-          setCommonTags={setCommonTags}
-        />
-      )}
+
+      {
+        isPrefsModalOpen && (
+          <PreferencesModal
+            customer={customer}
+            onClose={() => setIsPrefsModalOpen(false)}
+            onSave={handleSavePrefs}
+          />
+        )
+      }
+      {
+        isTagsModalOpen && (
+          <TagsModal
+            customer={customer}
+            onClose={() => setIsTagsModalOpen(false)}
+            onSave={handleSaveTags}
+            commonTags={commonTags}
+            setCommonTags={setCommonTags}
+          />
+        )
+      }
       <EmailModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
