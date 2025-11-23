@@ -289,7 +289,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
-  const { connectGoogle, loading: googleLoading } = useGoogleCalendar();
+  const { connectGoogle, loading: googleLoading, error: googleError, isConnected } = useGoogleCalendar();
 
   // Check Stripe account status on component load
   useEffect(() => {
@@ -614,20 +614,21 @@ const Settings: React.FC<SettingsProps> = ({
               <div className="p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-slate-800 dark:text-zinc-100">Google Calendar & Meet</p>
-                  <p className="text-sm text-slate-500 dark:text-zinc-400">Connect to create Google Meet links directly.</p>
+                  <p className="text-sm text-slate-600 dark:text-zinc-400 mb-4">
+                    Connect your Google Calendar to automatically create Google Meet links for your events.
+                  </p>
+                  <button
+                    onClick={connectGoogle}
+                    disabled={googleLoading || isConnected}
+                    className={`w-full px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${isConnected
+                      ? 'bg-green-600 text-white cursor-default'
+                      : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-300 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
+                      }`}
+                  >
+                    {googleLoading ? 'Connecting...' : isConnected ? 'Google Calendar Connected' : 'Connect Google Calendar'}
+                  </button>
+                  {googleError && <p className="text-red-500 text-xs mt-2">{googleError}</p>}
                 </div>
-                <button
-                  onClick={connectGoogle}
-                  disabled={googleLoading}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-zinc-700 border border-slate-200 dark:border-zinc-600 hover:bg-slate-50 dark:hover:bg-zinc-600 transition-colors flex items-center gap-2"
-                >
-                  {googleLoading ? 'Connecting...' : (
-                    <>
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" /></svg>
-                      Connect Google
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           </div>

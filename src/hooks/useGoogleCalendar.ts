@@ -2,8 +2,20 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 export const useGoogleCalendar = () => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
+
+    // Check if user is connected to Google
+    const checkConnection = useCallback(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.identities?.some((identity) => identity.provider === 'google')) {
+            setIsConnected(true);
+        }
+    }, []);
+
+    // Check on mount
+    useState(() => {
+        checkConnection();
+    });
 
     const connectGoogle = async () => {
         setLoading(true);
@@ -76,6 +88,7 @@ export const useGoogleCalendar = () => {
     return {
         connectGoogle,
         createMeeting,
+        isConnected,
         loading,
         error,
     };
