@@ -13,7 +13,7 @@ export const useGoogleCalendar = () => {
                 provider: 'google',
                 options: {
                     scopes: 'https://www.googleapis.com/auth/calendar.events',
-                    redirectTo: window.location.origin + '/settings', // Redirect back to settings
+                    redirectTo: window.location.origin, // Redirect to root (HashRouter handles the rest)
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
