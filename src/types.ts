@@ -204,3 +204,41 @@ export interface ColorTheme {
   colors: { [key: string]: string };
   swatchColor: string;
 }
+
+// ----- PROJECTS TYPES -----
+export interface ProjectLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export interface ProjectChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface Project {
+  id: string;
+  user_id: string;
+  // Step 1: What
+  name: string;
+  description: string;
+  goals: string;
+
+  // Step 2: How
+  tech_stack: string[];
+  tools: string[];
+
+  // Step 3: When
+  start_date: string;
+  end_date?: string;
+  status: 'Not Started' | 'In Progress' | 'Completed' | 'On Hold';
+
+  // Step 4: Track
+  notes: string;
+  links: ProjectLink[];
+  checklist: ProjectChecklistItem[];
+
+  created_at: string;
+}
